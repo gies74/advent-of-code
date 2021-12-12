@@ -21,7 +21,8 @@ class Node {
         paths.push([no.name]);
         continue;
       }
-      if (no.name === "start" || !no.large && smallNodesVisited.includes(no))  /// <* extra condition for part 2 *> && includesDouble(smallNodesVisited) )
+       /// extra condition:  && includesDouble(smallNodesVisited) )
+      if (no.name === "start" || !no.large && smallNodesVisited.includes(no)  /* insert extra condition for part 2 here */  ) 
         continue;
       paths = paths.concat(no.findPaths(smallNodesVisited.slice(0)));
     }
@@ -49,5 +50,5 @@ lines.forEach(l => {
   new Edge(nodes[nnames[0]], nodes[nnames[1]]);
 });
 
-
 var paths = nodes["start"].findPaths();
+console.log(`Found ${paths.length} paths`);
