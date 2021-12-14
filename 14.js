@@ -31,11 +31,7 @@ for (n=0; n<pol.length-1;n++) {
   count(pol[n],pol[n+1], counts, 1);
 }
 counts[pol[pol.length-1]]++;
-  
-var maxmin = Object.values(counts).sort((a,b) => a<b ? -1:1);
-var max=0, min=999999999999999;
-for (elt in maxmin) {
-  if (maxmin[elt] < min) { min = maxmin[elt]; }
-  if (maxmin[elt] > max) { max = maxmin[elt]; }
-}
+
+var min = Object.values(counts).reduce((mm, e) => e < mm ? e : mm, 9999999999999999);
+var max = Object.values(counts).reduce((mm, e) => e > mm ? e : mm,0);
 console.log(`Answer ${max-min}`);
