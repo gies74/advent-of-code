@@ -27,13 +27,6 @@ class CavePt {
   }  
 }
 
-function resetCave(cheaperRisks) {
-    for (x=0; x<cave[0].length; x++)
-      for (y=0; y<cave.length; y++)
-	    cave[y][x].cumRisk = -1;
-	cheaperRisks.forEach(cr => {cave[cr.y][cr.x].cumRisk = cr.r; });
-}
-
 function markPath(pt) {
   pt.path = true;
   var r = pt.cumRisk - pt.risk;
@@ -51,19 +44,20 @@ function markPath(pt) {
 
 
 function start() {
-  cave = Array(lines.length * 5);
+  var timeS = Date.now();
+
+  var sc = 5;  // for part 1 , set this value to 1
+  cave = Array(lines.length * sc);
   for (var yy=0; yy<lines.length; yy++) {
-    for (var yi=0; yi<5; yi++) {
-      cave[yi*lines.length + yy] = Array(lines[0].length * 5);
+    for (var yi=0; yi<sc; yi++) {
+      cave[yi*lines.length + yy] = Array(lines[0].length * sc);
       for (var xx=0; xx<lines[0].length; xx++) {
-        for (var xi=0; xi<5; xi++) {
+        for (var xi=0; xi<sc; xi++) {
 		  cave[yi*lines.length + yy][xi*lines[0].length + xx] = new CavePt(xi*lines[0].length + xx, yi*lines.length+ yy, (parseInt(lines[yy][xx]) + yi + xi -1) % 9 + 1);
 		}
 	  }
 	}
   }
-  // cave = lines.map((l,y) => l.split('').map((c,x) => new CavePt(x, y, parseInt(c))));
-  var cheaperRisks = [];
   
   var cumRisk = cave[cave.length-1][cave[0].length-1].getRisk();
   while (true) {
@@ -92,24 +86,26 @@ function start() {
     }
 	if (!improved)
 	  break;
-	//cheaperRisks.push({x:nX, y:nY, r:nR});	  
-	//resetCave(cheaperRisks);
     cumRisk = cave[cave.length-1][cave[0].length-1].getRisk();
   }
-  //var cumRisk = cave[0][0].getRisk(); 
-  console.log(cumRisk);  
   
-  markPath(cave[cave.length-1][cave[0].length-1]);
+  var timeE = Date.now();
   
-  for(var y=0;y<cave.length;y++) {
-    var l1 = "", l2="";
-    for(var x=0;x<cave[0].length;x++) {
-      l1 += " " + (cave[y][x].path ? "*" : " ") + cave[y][x].risk;
-      l2 += ("  " + cave[y][x].cumRisk).substr(-3);
-    }
-    console.log(l1);
-    console.log(l2);
-  }
+
+  console.log(`Minimal total risk ${cumRisk} (calc time ${timeE-timeS}ms)`);  
+  
+  // DRAW THE MAZE
+  // markPath(cave[cave.length-1][cave[0].length-1]);
+  
+  // for(var y=0;y<cave.length;y++) {
+  //   var l1 = "", l2="";
+  //   for(var x=0;x<cave[0].length;x++) {
+  //     l1 += " " + (cave[y][x].path ? "*" : " ") + cave[y][x].risk;
+  //     l2 += ("  " + cave[y][x].cumRisk).substr(-3);
+  //   }
+  //   console.log(l1);
+  //   console.log(l2);
+  // }
 }
 </script>
 </head>
