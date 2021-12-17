@@ -10,9 +10,9 @@ function evaluate(type, values) {
   if (type == 1)
 	return values.reduce((prod, e) => prod * e, 1);
   if (type == 2)
-	return values.reduce((min, e) => min < e ? min : e, 99999999999999);
+	return values.reduce((min, e) => min < e ? min : e, Number.MAX_SAFE_INTEGER);
   if (type == 3)
-	return values.reduce((max, e) => max > e ? max : e, -99999999999999);
+	return values.reduce((max, e) => max > e ? max : e, Number.MIN_SAFE_INTEGER);
   if (![5,6,7].includes(type) || values.length != 2)
     throw "invalid arguments";
   if (type == 5)

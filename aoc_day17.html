@@ -1,0 +1,47 @@
+<html>
+<head>
+<script>
+var xx = [241,273];
+var yy = [-97,-63];
+
+
+function shoot(vx, vy) {
+  var px=0, py=0, hit=false;
+  for (s=1;px <= xx[1] && py >= yy[0];s++) {
+    px += vx;
+	py += vy;
+	hit = px >= xx[0] && px <= xx[1] && py >= yy[0] && py <= yy[1]; 
+	// console.log(`Op ${px},${py} met vector ${vx},${vy} en dit is ${hit ? "raak" : "mis"}\n`);
+	if (hit)
+	  return true;
+	vx = Math.max(0, vx-1);
+	vy--;	
+  }
+  return false;
+}
+
+function start() {
+  var vx=30;
+  var vy=0;
+  
+  var minVx = Math.ceil(Math.sqrt(2 * xx[0]));
+  var maxVx = xx[1];
+  var cnt=0;
+  var tryCnt=0;
+  for (var tx = minVx-5; tx <= maxVx; tx++) {
+    for (var minVxVy = 200; minVxVy >= yy[0]; minVxVy--) {
+      var hit = shoot(tx, minVxVy);
+	  if (hit) {
+	    cnt++;
+	  }
+	  tryCnt++;
+    }
+  }
+  console.log(`Aantal ${cnt}, ${tryCnt} geprobeerd`);
+}
+</script>
+</head>
+<body>
+<button onclick="start()">Start</button>
+</body>
+</html>
