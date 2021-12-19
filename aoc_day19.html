@@ -142,7 +142,7 @@ function start() {
   }
   if (unknown.length)
     throw "Not all classified";
-  // part 1: vanaf hier known.map(k => k.beacons).flat() gestringified, naar textfile (beacon per regel) en sort <txt> | uniq | wc -l
+  // part 1: vanaf hier known.map(k => k.translateBeacons(k.offset)).flat() gestringified, naar textfile (beacon per regel) en sort <txt> | uniq | wc -l
   // part 2: var allOffsets = known.map(k => k.offset), zie verder functie start0()
 }
 </script>
