@@ -7,7 +7,7 @@ var steps = { "3": 1, "4": 3, "5":6, "6":7, "7":6, "8":3, "9":1 };
 
 function universesToWin(pos1, sc1, pos2, sc2, turnp1, p1winner) {
   if (sc1 >= 21 || sc2 >= 21) 
-    return (sc1 >= 21 && sc2 < 21 == p1winner || sc1 < 21 && sc2 >= 21 != p1winner) ? 1 : 0;
+    return (sc1 >= 21 == p1winner || sc2 >= 21 != p1winner) ? 1 : 0;
   var universes = 0;
   for (var step in steps)
     if (turnp1) {
