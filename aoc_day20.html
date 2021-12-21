@@ -12,13 +12,7 @@ var image0 = ["..###.#.#...##.#....#..##....##.#.#......#.##.##...###..#.##...#.
 function start() {
   var image = image0.slice(0);
   var newImg =[];
-  var dots = Array(image[0].length).fill(".").join('');
-  image.unshift(dots);
-  image.unshift(dots);
-  image.push(dots);
-  image.push(dots);
-  image = image.map(l => `..${l}..`);
-  for (var t=0; t<50; t++) {
+  for (var t=0; t<100; t++) {
     var newImg =[];
 	var pad = (t%2==0 ? "." : "#" );
 	

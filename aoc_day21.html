@@ -1,0 +1,59 @@
+<html>
+<head>
+<script>
+
+// per number of steps to proceed => amount of universes to do so
+var steps = { "3": 1, "4": 3, "5":6, "6":7, "7":6, "8":3, "9":1 };
+
+function universesToWin(pos1, sc1, pos2, sc2, turnp1, p1winner) {
+  if (sc1 >= 21 || sc2 >= 21) 
+    return (sc1 >= 21 && sc2 < 21 == p1winner || sc1 < 21 && sc2 >= 21 != p1winner) ? 1 : 0;
+  var universes = 0;
+  for (var step in steps)
+    if (turnp1) {
+	  var newPos = (pos1 + parseInt(step) -1) % 10 + 1;
+	  universes += steps[step] * universesToWin(newPos, sc1 + newPos, pos2, sc2, !turnp1, p1winner);
+	} else {
+	  var newPos = (pos2 + parseInt(step) -1) % 10 + 1;
+	  universes += steps[step] * universesToWin(pos1, sc1, newPos, sc2 + newPos, !turnp1, p1winner);
+	}
+  return universes;
+}
+
+// part2
+function start() {
+   var universes;
+   universes = universesToWin(6, 0, 3, 0, true, true);     
+   console.log(`Universes p1 wins: ${universes}`);
+   universes = universesToWin(6, 0, 3, 0, true, false);     
+   console.log(`Universes p2 wins: ${universes}`);
+}
+
+// part1
+function start0() {
+
+  var p1=6, p2=3, s1=0, s2=0;
+  var d=0;
+  var turn_p1 = true;
+  
+  while (s1 < 1000 && s2 < 1000) {
+    var add = ++d + ++d + ++d;
+	if (turn_p1) {
+	  p1 = (p1 + add - 1) % 10 + 1;
+	  s1 += p1;
+	} else {
+	  p2 = (p2 + add - 1) % 10 + 1;
+	  s2 += p2;
+	}
+	turn_p1 = !turn_p1;
+  }
+  var answer = d * (s1 >= 1000 ? s2 : s1);
+  console.log(`Answer ${answer}`);
+
+}
+</script>
+</head>
+<body>
+<button onclick="start()">Start</button>
+</body>
+</html>
