@@ -5,17 +5,17 @@
 // per number of steps to proceed => amount of universes to do so
 var universesByStepsForward = { "3": 1, "4": 3, "5":6, "6":7, "7":6, "8":3, "9":1 };
 
-function universesToWin(pos1, sc1, pos2, sc2, turnp1, p1winner) {
+function universesToWin(pos1, sc1, pos2, sc2, p1hasTurn, p1toWin) {
   if (sc1 >= 21 || sc2 >= 21) 
-    return (sc1 >= 21 == p1winner || sc2 >= 21 != p1winner) ? 1 : 0;
+    return (sc1 >= 21 == p1toWin || sc2 >= 21 != p1toWin) ? 1 : 0;
   var universes = 0;
   for (var steps in universesByStepsForward)
-    if (turnp1) {
-	  var newPos = (pos1 + parseInt(steps) -1) % 10 + 1;
-	  universes += universesByStepsForward[steps] * universesToWin(newPos, sc1 + newPos, pos2, sc2, !turnp1, p1winner);
+    if (p1hasTurn) {
+	  var newPos1 = (pos1 + parseInt(steps) -1) % 10 + 1;
+	  universes += universesByStepsForward[steps] * universesToWin(newPos1, sc1 + newPos1, pos2, sc2, !p1hasTurn, p1toWin);
 	} else {
-	  var newPos = (pos2 + parseInt(steps) -1) % 10 + 1;
-	  universes += universesByStepsForward[steps] * universesToWin(pos1, sc1, newPos, sc2 + newPos, !turnp1, p1winner);
+	  var newPos2 = (pos2 + parseInt(steps) -1) % 10 + 1;
+	  universes += universesByStepsForward[steps] * universesToWin(pos1, sc1, newPos2, sc2 + newPos2, !p1hasTurn, p1toWin);
 	}
   return universes;
 }
