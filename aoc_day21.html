@@ -3,19 +3,19 @@
 <script>
 
 // per number of steps to proceed => amount of universes to do so
-var steps = { "3": 1, "4": 3, "5":6, "6":7, "7":6, "8":3, "9":1 };
+var universesByStepsForward = { "3": 1, "4": 3, "5":6, "6":7, "7":6, "8":3, "9":1 };
 
 function universesToWin(pos1, sc1, pos2, sc2, turnp1, p1winner) {
   if (sc1 >= 21 || sc2 >= 21) 
     return (sc1 >= 21 == p1winner || sc2 >= 21 != p1winner) ? 1 : 0;
   var universes = 0;
-  for (var step in steps)
+  for (var steps in universesByStepsForward)
     if (turnp1) {
-	  var newPos = (pos1 + parseInt(step) -1) % 10 + 1;
-	  universes += steps[step] * universesToWin(newPos, sc1 + newPos, pos2, sc2, !turnp1, p1winner);
+	  var newPos = (pos1 + parseInt(steps) -1) % 10 + 1;
+	  universes += universesByStepsForward[steps] * universesToWin(newPos, sc1 + newPos, pos2, sc2, !turnp1, p1winner);
 	} else {
-	  var newPos = (pos2 + parseInt(step) -1) % 10 + 1;
-	  universes += steps[step] * universesToWin(pos1, sc1, newPos, sc2 + newPos, !turnp1, p1winner);
+	  var newPos = (pos2 + parseInt(steps) -1) % 10 + 1;
+	  universes += universesByStepsForward[steps] * universesToWin(pos1, sc1, newPos, sc2 + newPos, !turnp1, p1winner);
 	}
   return universes;
 }
@@ -24,9 +24,9 @@ function universesToWin(pos1, sc1, pos2, sc2, turnp1, p1winner) {
 function start() {
    var universes;
    universes = universesToWin(6, 0, 3, 0, true, true);     
-   console.log(`Universes p1 wins: ${universes}`);
+   console.log(`Universes in which p1 wins: ${universes}`);
    universes = universesToWin(6, 0, 3, 0, true, false);     
-   console.log(`Universes p2 wins: ${universes}`);
+   console.log(`Universes in which p2 wins: ${universes}`);
 }
 
 // part1
