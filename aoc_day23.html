@@ -1,0 +1,272 @@
+<html>
+<head>
+<script>
+
+var moveCost = { "A": 1, "B": 10, "C": 100, "D": 1000 };
+
+function free(x) {
+  return !occupied(x);
+}
+
+function occupied(x) {
+  return (x !== ".") ? x : null;
+}
+
+function swappable(x, y) {
+  if (free(x) && occupied(y))
+    return y;
+  if (occupied(x) && free(y))
+    return x;
+  return null
+}
+
+class BurrowState {
+  constructor (rooms, hall=[[".","."],".",".",".",[".","."]]) {
+    this.roomA = rooms[0];
+    this.roomB = rooms[1];
+    this.roomC = rooms[2];
+    this.roomD = rooms[3];
+	this.sideL = hall[0];
+	this.hallAB = hall[1];
+	this.hallBC = hall[2];
+	this.hallCD = hall[3];
+	this.sideR = hall[4];
+  }
+  
+  clone(b) {
+    return new BurrowState([this.roomA.slice(0), this.roomB.slice(0), this.roomC.slice(0), this.roomD.slice(0)],[this.sideL.slice(0), this.hallAB, this.hallBC, this.hallCD, this.sideR.slice(0)]); 
+  }
+  
+  toConsoleString() {
+    return `#############\n` + 
+	  `#${this.sideL[1]}${this.sideL[0]}.${this.hallAB}.${this.hallBC}.${this.hallCD}.${this.sideR[0]}${this.sideR[1]}#\n` + 
+	  `###${this.roomA[0]}#${this.roomB[0]}#${this.roomC[0]}#${this.roomD[0]}###\n` + 
+	  `  #${this.roomA[1]}#${this.roomB[1]}#${this.roomC[1]}#${this.roomD[1]}#\n` + 
+	  `  #########  `;	  
+  }
+  
+  toString() {
+    return `${this.sideL[1]}${this.sideL[0]}${this.hallAB}${this.hallBC}${this.hallCD}${this.sideR[0]}${this.sideR[1]}|${this.roomA.join('')}|${this.roomB.join('')}|${this.roomC.join('')}|${this.roomD.join('')}`;
+  }
+  
+  generateNext() {
+    var states = {};
+	
+	// move within hallway
+	var kind;
+	if (kind = swappable(this.sideL[1], this.sideL[0])) {
+	  var b = this.clone();
+	  var tmp = b.sideL[1]; b.sideL[1] = b.sideL[0]; b.sideL[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	}
+	if (kind = swappable(this.hallAB, this.sideL[0])) {
+	  var b = this.clone();
+	  var tmp = b.hallAB; b.hallAB = b.sideL[0]; b.sideL[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if (kind = swappable(this.hallAB, this.hallBC)) {
+	  var b = this.clone();
+	  var tmp = b.hallAB; b.hallAB = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if (kind = swappable(this.hallCD, this.hallBC)) {
+	  var b = this.clone();
+	  var tmp = b.hallCD; b.hallCD = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if (kind = swappable(this.hallCD, this.sideR[0])) {
+	  var b = this.clone();
+	  var tmp = b.hallCD; b.hallCD = b.sideR[0]; b.sideR[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if (kind = swappable(this.sideR[1], this.sideR[0])) {
+	  var b = this.clone();
+	  var tmp = b.sideR[1]; b.sideR[1] = b.sideR[0]; b.sideR[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	}
+
+    // move within rooms
+	for (var j=0; j<this.roomA.length-1; j++) {
+	  if ((kind = swappable(this.roomA[j], this.roomA[j+1])) && (this.roomA[j] === "A" && this.roomA.slice(j+1).every(c => /[\.A]/.test(c)) || this.roomA[j+1] === "A" && this.roomA.slice(j+1).some(c => !(/[\.A]/.test(c))) || this.roomA[j+1].match(/[BCD]/))) {
+	    var b = this.clone();
+	    var tmp = b.roomA[j]; b.roomA[j] = b.roomA[j+1]; b.roomA[j+1] = tmp;
+	    states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	  }
+	  if ((kind = swappable(this.roomB[j], this.roomB[j+1])) && (this.roomB[j] === "B" && this.roomB.slice(j+1).every(c => /[\.B]/.test(c)) || this.roomB[j+1] === "B" && this.roomB.slice(j+1).some(c => !(/[\.B]/.test(c))) || this.roomB[j+1].match(/[ACD]/))) {
+	    var b = this.clone();
+	    var tmp = b.roomB[j]; b.roomB[j] = b.roomB[j+1]; b.roomB[j+1] = tmp;
+	    states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	  }
+	  if ((kind = swappable(this.roomC[j], this.roomC[j+1])) && (this.roomC[j] === "C" && this.roomC.slice(j+1).every(c => /[\.C]/.test(c)) || this.roomC[j+1] === "C" && this.roomC.slice(j+1).some(c => !(/[\.C]/.test(c))) || this.roomC[j+1].match(/[ABD]/))) {
+	    var b = this.clone();
+	    var tmp = b.roomC[j]; b.roomC[j] = b.roomC[j+1]; b.roomC[j+1] = tmp;
+	    states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	  }
+	  if ((kind = swappable(this.roomD[j], this.roomD[j+1])) && (this.roomD[j] === "D" && this.roomD.slice(j+1).every(c => /[\.D]/.test(c)) || this.roomD[j+1] === "D" && this.roomD.slice(j+1).some(c => !(/[\.D]/.test(c))) || this.roomD[j+1].match(/[ABC]/))) {
+	    var b = this.clone();
+	    var tmp = b.roomD[j]; b.roomD[j] = b.roomD[j+1]; b.roomD[j+1] = tmp;
+	    states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 1};
+	  }
+	}
+	
+	// leave rooms
+	if ((kind = occupied(this.roomA[0])) && free(this.sideL[0]) && !this.roomA.every(c => /[\.A]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomA[0]; b.roomA[0] = b.sideL[0]; b.sideL[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomA[0])) && free(this.hallAB) && !this.roomA.every(c => /[\.A]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomA[0]; b.roomA[0] = b.hallAB; b.hallAB = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomB[0])) && free(this.hallAB) && !this.roomB.every(c => /[\.B]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomB[0]; b.roomB[0] = b.hallAB; b.hallAB = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomB[0])) && free(this.hallBC) && !this.roomB.every(c => /[\.B]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomB[0]; b.roomB[0] = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomC[0])) && free(this.hallBC) && !this.roomC.every(c => /[\.C]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomC[0]; b.roomC[0] = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomC[0])) && free(this.hallCD) && !this.roomC.every(c => /[\.C]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomC[0]; b.roomC[0] = b.hallCD; b.hallCD = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomD[0])) && free(this.hallCD) && !this.roomD.every(c => /[\.D]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomD[0]; b.roomD[0] = b.hallCD; b.hallCD = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	if ((kind = occupied(this.roomD[0])) && free(this.sideR[0]) && !this.roomD.every(c => /[\.D]/.test(c)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomD[0]; b.roomD[0] = b.sideR[0]; b.sideR[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost[kind] * 2};
+	}
+	
+	// move into room
+	if (free(this.roomA[0]) && ("A" === this.sideL[0]) && this.roomA.slice(1).every(c => c.match(/[\.A]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomA[0]; b.roomA[0] = b.sideL[0]; b.sideL[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["A"] * 2};
+	}
+	if (free(this.roomA[0]) && ("A" === this.hallAB) && this.roomA.slice(1).every(c => c.match(/[\.A]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomA[0]; b.roomA[0] = b.hallAB; b.hallAB = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["A"] * 2};
+	}
+	if (free(this.roomB[0]) && ("B" === this.hallAB) && this.roomB.slice(1).every(c => c.match(/[\.B]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomB[0]; b.roomB[0] = b.hallAB; b.hallAB = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["B"] * 2};
+	}
+	if (free(this.roomB[0]) && ("B" === this.hallBC) && this.roomB.slice(1).every(c => c.match(/[\.B]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomB[0]; b.roomB[0] = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["B"] * 2};
+	}
+	if (free(this.roomC[0]) && ("C" === this.hallBC) && this.roomC.slice(1).every(c => c.match(/[\.C]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomC[0]; b.roomC[0] = b.hallBC; b.hallBC = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["C"] * 2};
+	}
+	if (free(this.roomC[0]) && ("C" === this.hallCD) && this.roomC.slice(1).every(c => c.match(/[\.C]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomC[0]; b.roomC[0] = b.hallCD; b.hallCD = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["C"] * 2};
+	}
+	if (free(this.roomD[0]) && ("D" === this.hallCD) && this.roomD.slice(1).every(c => c.match(/[\.D]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomD[0]; b.roomD[0] = b.hallCD; b.hallCD = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["D"] * 2};
+	}
+	if (free(this.roomD[0]) && ("D" === this.sideR[0]) && this.roomD.slice(1).every(c => c.match(/[\.D]/)))
+	{
+	  var b = this.clone();
+	  var tmp = b.roomD[0]; b.roomD[0] = b.sideR[0]; b.sideR[0] = tmp;
+	  states[b.toString()] = { "burrowState": b, "stepCost": moveCost["D"] * 2};
+	}
+	
+	return states;    
+  }
+  
+  isSolution() {
+    return this.roomA.every(k => k === "A") && this.roomB.every(k => k === "B") && this.roomC.every(k => k === "C") && this.roomD.every(k => k === "D");
+  }
+  
+}
+
+
+function start() {
+  var stop = false;
+  var b0 = new BurrowState([["B","A"], ["C","D"], ["B","C"], ["D","A"]]);
+//  var b0 = new BurrowState([["C","D"], ["A","C"], ["B","A"], ["D","B"]]);
+  b0.roomA.splice(1, 0, "D", "D");
+  b0.roomB.splice(1, 0, "C", "B");
+  b0.roomC.splice(1, 0, "B", "A");
+  b0.roomD.splice(1, 0, "A", "C");
+  var allStates = {};
+  allStates[b0.toString()] = { "cost": 0, "burrowState": b0, "explored": false };
+  
+  var tmp;
+  var updates = 0;
+  do {
+    tmp = {};
+    for (var a in allStates) {
+	  if (allStates[a].explored)
+	    continue;
+      var nextStates = allStates[a].burrowState.generateNext();
+	  for (var s in nextStates) {
+	    if (!allStates[s] || allStates[s].cost > nextStates[s].stepCost + allStates[a].cost)
+		  tmp[s] = { "cost": nextStates[s].stepCost + allStates[a].cost, "burrowState": nextStates[s].burrowState, "explored": !!allStates[s] };
+	  }
+	  allStates[a].explored = true;
+	  if (stop)
+	    break;
+	}
+	allStates = {...allStates, ...tmp};
+	console.log(`Now ${Object.keys(allStates).length} states of which ${Object.values(allStates).filter(s => !s.explored).length} unexplored`);
+  } while (Object.keys(tmp).length > 0 && !stop);
+  
+  var best = null;
+  for (var a in allStates) {
+    if (allStates[a].burrowState.isSolution()) {
+	  best = a;
+	  break;
+	}
+  }  
+  
+  console.log(`Explored ${Object.keys(allStates).length}`);
+  console.log(`Found ${best ? allStates[best].cost : "???"}`);
+}
+
+
+
+</script>
+</head>
+<body>
+<button onclick="start()">Start</button>
+</body>
+</html>
