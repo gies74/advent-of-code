@@ -244,7 +244,7 @@ function start() {
   if (solvedStatus)
 	console.log(printMoves(solvedStatus));
   var allStatuses = Object.values(statuses);
-  console.log(`explored: ${allStatuses.filter(s => s.explored).length}, unexplored: ${allStatuses.filter(s => !s.explored).length}, total: ${allStatuses.length}`);
+  console.log(`Explored: ${allStatuses.filter(s => s.explored).length} board states, unexplored: ${allStatuses.filter(s => !s.explored).length}, total: ${allStatuses.length}`);
   console.log(`Time elapsed: ${eDate - sDate}ms`);
 
 }
@@ -278,6 +278,7 @@ function printMoves(solvedStatus) {
     moves.unshift(`${move.obj.letter} (${move.obj.x},${move.obj.y}) -> (${move.obj.x+move.dx},${move.obj.y+move.dy})`);
 	solvedStatus = solvedStatus.from;
   }
+  moves = moves.map((e, i) => `${i + 1}. ${e}`);
   return moves.join("\n");
 }
 
