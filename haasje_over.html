@@ -234,12 +234,19 @@ var puzzles = {
 
 //input = [  "v.>.",  "...>",  "v...",  "...."];
 function start() {
+  statuses = {};
   var initObjects = puzzles["p60"];
   var init = new BordStatus(null, initObjects);
   statuses[init.toString()] = {"explored": false, "bordStatus": init, "from": null, "move": null };
+  var sDate = Date.now();
   var solvedStatus = solve();
+  var eDate = Date.now();
   if (solvedStatus)
 	console.log(printMoves(solvedStatus));
+  var allStatuses = Object.values(statuses);
+  console.log(`explored: ${allStatuses.filter(s => s.explored).length}, unexplored: ${allStatuses.filter(s => !s.explored).length}, total: ${allStatuses.length}`);
+  console.log(`Time elapsed: ${eDate - sDate}ms`);
+
 }
 
 function solve() {
