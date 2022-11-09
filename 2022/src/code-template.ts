@@ -4,7 +4,7 @@ namespace day00 {
     const main = () => {
         const input = fs.readFileSync(`${__dirname}\\..\\..\\aoc\\day00\\input.txt`).toString().split("\n").slice(0, -1);
         const result = processInput(input);
-        console.log(`Antwoord: ${result}`);
+        console.log(`Answer: ${result}`);
     }
 
     const processInput = (input) => {
