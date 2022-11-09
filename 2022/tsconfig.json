@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "outDir": "./out",                                   /* Specify an output folder for all emitted files. */
+    "rootDir": "./src",
+    "target": "ES5",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "sourceMap": true,                                /* Create source map files for emitted JavaScript files. */
+    "moduleResolution": "node",            /* Ensure that casing is correct in imports. */
+  }
+}
