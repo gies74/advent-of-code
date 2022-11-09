@@ -1,0 +1,130 @@
+<html>
+<head>
+<script>
+let glcage = [[3,4,4,4],[1,3,2,3],[2,2,1,1],[4,1,3,2]];
+function d23() { //input is hardcoded
+  //let glcage = [[2,4,4,1],[3,3,2,4],[2,2,1,3],[4,1,3,1]]
+  //let glcage = [[2,4],[1,3],[1,2],[4,3]];
+  let glhall = [0,0,0,0,0,0,0];
+  
+  /*
+CAGE   0 1 2 3
+HALL 01 2 3 4 56
+       0 0 0 0
+       1 1 1 1
+  */
+  
+  
+  let cl = glcage[0].length;
+  let minpt = 9999999999;
+  let cageValid = (cage,spot) => cage.every(x=>(x==spot||x==0));
+  
+  let cache = {};
+  let moveState = (cage,hall,pt) => {
+    if (pt>=minpt) return;
+    let win = true;
+    winLoop:
+    for (let i=0;i<cage.length;i++) {
+      for (let j=0;j<cl;j++) {
+        if (cage[i][j] != i+1) {
+          win = false;
+          break winLoop;
+        }
+      }
+    }
+    if (win) {
+      if (minpt>pt) {
+        console.log(pt);
+        minpt = pt;
+      }
+      return;
+    }
+    let crstr = cage + "|" + hall;
+    if (cache[crstr]) {
+      if (cache[crstr] <= pt) return;
+    }
+    cache[crstr] = pt;
+    
+    for (let i=0;i<cage.length;i++) {
+      let cid = cage[i].findIndex(x=>(x!=0));
+      if (cid==-1) continue; //lane is empty
+      let vl = cage[i][cid];
+      if (vl == i+1) {
+        if ( cageValid(cage[i],vl) ) {
+          continue; //is already in the correct position
+        }
+      }
+      
+      let spc = cid; //spaces to move
+      for (let j=i+1;j>=0;j--) { //left
+        if (hall[j] != 0) break;
+        spc++;
+        if (j!=0) spc++; //edge is +1 instead of +2
+        let cgc = [...(cage.map(x=>[...x]))];
+        let hlc = [...hall];
+        hlc[j] = cgc[i][cid];
+        cgc[i][cid] = 0;
+        moveState(cgc,hlc,pt+spc*(10**(vl-1)));
+      }
+      spc = cid;
+      for (let j=i+2;j<hall.length;j++) { //left
+        if (hall[j] != 0) break;
+        spc++;
+        if (j!=hall.length-1) spc++;
+        let cgc = [...(cage.map(x=>[...x]))];
+        let hlc = [...hall];
+        hlc[j] = cgc[i][cid];
+        cgc[i][cid] = 0;
+        moveState(cgc,hlc,pt+spc*(10**(vl-1)));
+      }
+    }
+    hallLoop:
+    for (let i=0;i<hall.length;i++) {
+      if (hall[i] == 0) continue;
+      let vl = hall[i];
+      if (!cageValid(cage[vl-1],vl)) continue;
+      let spc = 2;
+      if (i<vl) { //to the left - check to avoid disturbances
+      	for (let j=i+1;j<=vl;j++) {
+          if (hall[j] != 0) continue hallLoop;
+          spc++;
+          if (j!=1) spc++;
+        }
+      } else if (i>vl+1) {
+        for (let j=i-1;j>=vl+1;j--) {
+          //if (crstr == "2,4,4,1,0,0,0,2,0,3,3,3,0,0,3,1|1,1,4,0,2,2,4" && i==4) console.log("finding left obstructions",j,hall[j],vl+1,hall);
+          if (hall[j] != 0) continue hallLoop;
+          spc++;
+          if (j!=hall.length-2) spc++;
+        }
+      }
+      
+      let cid = cage[vl-1].findIndex(x=>(x!=0));
+      if (cid==-1) cid=cl;
+      cid--;
+      //if (cid==-1) console.log("cid somehow 0");
+			let cgc = [...(cage.map(x=>[...x]))];
+      let hlc = [...hall];
+      spc += cid;
+      cgc[vl-1][cid] = vl;
+      hlc[i] = 0;
+      
+      moveState(cgc,hlc,pt+spc*(10**(vl-1)));
+    }
+  }
+  
+  moveState(glcage,glhall,0);
+  return minpt;
+}
+function start() {
+  d23();
+}
+
+
+
+</script>
+</head>
+<body>
+<button onclick="start()">Start</button>
+</body>
+</html>

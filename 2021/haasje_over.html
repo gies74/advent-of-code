@@ -1,0 +1,292 @@
+<html>
+<head>
+<script>
+
+var statuses = {};
+var HOLES = ["0,0", "0,4", "2,2", "4,0", "4,4"];
+
+class BordStatus {
+  constructor(initState=null, initObjects=null) {
+    if (initState)
+	  this.state = initState.map(row => row.slice(0));
+	else
+      this.state = new Array(5).fill(0).map(() => new Array(5).fill('.'));	
+	if (initObjects) {
+	  this.objects = initObjects.map(o => o.clone(this));
+	  if (!initState) {
+	    for (var o of initObjects) {
+		  o.bordStatus = this;
+		  this.state[o.y][o.x] = o.letter;
+		  if (o instanceof Fox) {
+			if (o.isHoriz) 
+			  this.state[o.y][o.x+1] = o.letter;
+			else 
+			  this.state[o.y+1][o.x] = o.letter;
+		  
+		  }
+		}
+	  }
+	}
+	else
+	  this.objects = [];
+
+  }
+  
+  isSolved() {
+	for (var i=0; i<5; i++)
+	  for (var j=0; j<5; j++)
+	    if (!HOLES.includes(`${i},${j}`) && this.state[i][j] === 'R')
+			return false;
+	return true;
+  }
+  
+  moveObject(move) {
+    var objIdx = this.objects.indexOf(move.obj);
+	var newBordStatus = this.clone();
+	var newObj = newBordStatus.objects[objIdx];
+	newObj.move(move.dx, move.dy);
+	return newBordStatus;
+  }
+  
+  toString() {
+    return this.state.map(row => row.join("")).join("\n");
+  }
+  
+  clone() {
+    return new BordStatus(this.state, this.objects);
+  }
+}
+
+class Fox {
+  constructor(x, y, isHoriz, bordStatus) {
+    this.x = x;
+	this.y = y;
+	this.isHoriz = isHoriz;
+	this.bordStatus = bordStatus;
+	this.letter = "F";
+  }
+  
+  findAllMoves() {
+    var statuses = [];
+    if (this.isHoriz) {
+	  if (this.x > 0 && this.bordStatus.state[this.y][this.x - 1] == ".") {
+	    statuses.push({"obj": this, "dx": -1, "dy": 0});
+	  }
+	  if (this.x < 3 && this.bordStatus.state[this.y][this.x + 2] == ".") {
+	    statuses.push({"obj": this, "dx": 1, "dy": 0});
+	  }
+	}
+	else {
+	  if (this.y > 0 && this.bordStatus.state[this.y - 1][this.x] == ".") {
+	    statuses.push({"obj": this, "dx": 0, "dy": -1});
+	  }
+	  if (this.y < 3 && this.bordStatus.state[this.y + 2][this.x] == ".") {
+	    statuses.push({"obj": this, "dx": 0, "dy": 1});
+	  }
+	}
+	return statuses;
+  }
+  
+  move(dx, dy) {
+    if (dx == 1) {
+	  this.bordStatus.state[this.y][this.x] = ".";
+	  this.bordStatus.state[this.y][this.x + 2] = this.letter;
+	}
+    if (dx == -1) {
+	  this.bordStatus.state[this.y][this.x + 1] = ".";
+	  this.bordStatus.state[this.y][this.x - 1] = this.letter;
+	}
+    if (dy == 1) {
+	  this.bordStatus.state[this.y][this.x] = ".";
+	  this.bordStatus.state[this.y + 2][this.x] = this.letter;
+	}
+    if (dy == -1) {
+	  this.bordStatus.state[this.y + 1][this.x] = ".";
+	  this.bordStatus.state[this.y - 1][this.x] = this.letter;
+	}
+    this.x += dx;
+	this.y += dy;	
+  }
+  
+  clone(bordStatus) {
+    return new Fox(this.x, this.y, this.isHoriz, bordStatus);
+  }
+}
+
+class Rabbit {
+  constructor(x, y, bordStatus) {
+    this.x = x;
+	this.y = y;
+	this.bordStatus = bordStatus;
+	this.letter = "R";
+  }
+  
+  findAllMoves() {
+    var statuses = [];
+	if (this.x > 1 && this.bordStatus.state[this.y][this.x - 1] != ".") {
+	  var dx = -2;
+	  while(this.x + dx >= 0) {
+	    if (this.bordStatus.state[this.y][this.x + dx] == ".") {
+  	      statuses.push({"obj": this, "dx": dx, "dy": 0});
+		  break;
+		}
+		dx--;
+	  }
+	}
+	if (this.x < 3 && this.bordStatus.state[this.y][this.x + 1] != ".") {
+	  var dx = 2;
+	  while(this.x + dx < 5) {
+	    if (this.bordStatus.state[this.y][this.x + dx] == ".") {
+  	      statuses.push({"obj": this, "dx": dx, "dy": 0});
+		  break;
+		}
+		dx++;
+	  }
+	}	
+	if (this.y > 1 && this.bordStatus.state[this.y - 1][this.x] != ".") {
+	  var dy = -2;
+	  while(this.y + dy >= 0) {
+	    if (this.bordStatus.state[this.y + dy][this.x ] == ".") {
+  	      statuses.push({"obj": this, "dx": 0, "dy": dy});
+		  break;
+		}
+		dy--;
+	  }
+	}
+	if (this.y < 3 && this.bordStatus.state[this.y + 1][this.x] != ".") {
+	  var dy = 2;
+	  while(this.y + dy < 5) {
+	    if (this.bordStatus.state[this.y + dy][this.x ] == ".") {
+  	      statuses.push({"obj": this, "dx": 0, "dy": dy});
+		  break;
+		}
+		dy++;
+	  }
+	}
+	return statuses;
+  }
+  move(dx, dy) {
+	this.bordStatus.state[this.y][this.x] = ".";
+    this.x += dx;
+	this.y += dy;	
+	this.bordStatus.state[this.y][this.x] = this.letter;
+  }  
+  clone(bordStatus) {
+    return new Rabbit(this.x, this.y, bordStatus);
+  }
+  
+}
+
+class Mushroom {
+  constructor(x, y, bordStatus) {
+    this.x = x;
+	this.y = y;
+	this.bordStatus = bordStatus;
+	this.letter = "M";
+  }
+  
+  findAllMoves() {
+    return [];
+  }
+  move(dx, dy) {
+  }
+  clone(bordStatus) {
+    return new Mushroom(this.x, this.y, bordStatus);
+  }
+}
+
+
+var puzzles = {
+  "self01": [
+	new Rabbit(3, 2), 
+	new Mushroom(1, 0), 
+	new Mushroom(2, 0), 
+	new Mushroom(3, 1)
+  ],
+  "p13": [
+    new Rabbit(2,1),
+	new Fox(3,1,true),
+	new Mushroom(3,0),
+	new Mushroom(1,1),
+	new Mushroom(2,2)
+  ],
+  "p25": [
+    new Rabbit(0,3),
+    new Rabbit(3,3),
+	new Fox(1,0,false),
+	new Fox(3,0,false),
+	new Mushroom(4,1),
+	new Mushroom(4,2),
+	new Mushroom(4,4)
+  ],
+  "p60": [
+    new Rabbit(3,1),
+    new Rabbit(4,2),
+    new Rabbit(3,4),
+	new Fox(0,1,true),
+	new Mushroom(3,0),
+	new Mushroom(2,2),
+	new Mushroom(0,3)
+  ]
+}
+
+
+
+//input = [  "v.>.",  "...>",  "v...",  "...."];
+function start() {
+  statuses = {};
+  var initObjects = puzzles["p60"];
+  var init = new BordStatus(null, initObjects);
+  statuses[init.toString()] = {"explored": false, "bordStatus": init, "from": null, "move": null };
+  var sDate = Date.now();
+  var solvedStatus = solve();
+  var eDate = Date.now();
+  if (solvedStatus)
+	console.log(printMoves(solvedStatus));
+  var allStatuses = Object.values(statuses);
+  console.log(`Explored: ${allStatuses.filter(s => s.explored).length} board states, unexplored: ${allStatuses.filter(s => !s.explored).length}, total: ${allStatuses.length}`);
+  console.log(`Time elapsed: ${eDate - sDate}ms`);
+
+}
+
+function solve() {
+  unexploredStatus = Object.values(statuses).find(s => !s.explored);
+  if (!unexploredStatus) {
+	console.error("No solution possible");
+	return null;
+  }
+  var bordStatus = unexploredStatus.bordStatus;
+  if (bordStatus.isSolved()) {
+    console.log("Solution found");
+	return unexploredStatus;
+  }
+  var allMoves = bordStatus.objects.map(o => o.findAllMoves()).flat();
+  for (var move of allMoves) {
+    var newStatus = bordStatus.moveObject(move);
+	if (!statuses[newStatus.toString()]) {
+	  statuses[newStatus.toString()] = {"explored": false, "bordStatus": newStatus, "from": unexploredStatus, "move": move };
+	}
+  }
+  unexploredStatus.explored = true;
+  return solve();
+}
+
+function printMoves(solvedStatus) {
+  moves = [];
+  while (solvedStatus.from) {
+    var move = solvedStatus.move;
+    moves.unshift(`${move.obj.letter} (${move.obj.x},${move.obj.y}) -> (${move.obj.x+move.dx},${move.obj.y+move.dy})`);
+	solvedStatus = solvedStatus.from;
+  }
+  moves = moves.map((e, i) => `${i + 1}. ${e}`);
+  return moves.join("\n");
+}
+
+
+
+</script>
+</head>
+<body>
+<button onclick="start()">Start</button>
+</body>
+</html>
