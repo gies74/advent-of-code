@@ -1,8 +1,7 @@
 import * as readline from 'readline';
+import * as settings from './settings';
 const fs = require('fs');
 const https = require('https');
-
-const YEAR=2021
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -14,19 +13,19 @@ const _doInit = (answer) => {
      host: `adventofcode.com`,
      port:443,
      method: 'GET',
-     path:`/${YEAR}/day/${answer}/input`, // 9-11-2022 19:29:58
+     path:`/${settings.Settings.YEAR}/day/${answer}/input`, // 9-11-2022 19:29:58
      headers: { 'cookie': process.env["AOC_COOKIE"] }
   };
 
   const zeroPadded = `0${answer}`.substring(answer.length - 1);
   const name = `day${zeroPadded}`;
-  let localDataPath = `${__dirname}\\..\\data\\${YEAR}\\${name}`;
+  let localDataPath = `${__dirname}\\..\\data\\${settings.Settings.YEAR}\\${name}`;
   if (!fs.existsSync(localDataPath)){
       fs.mkdirSync(localDataPath);
   }
   localDataPath += `\\input.txt`;
 
-  let localCodePath = `${__dirname}\\..\\src\\${YEAR}\\${name}`;
+  let localCodePath = `${__dirname}\\..\\src\\${settings.Settings.YEAR}\\${name}`;
   if (!fs.existsSync(localCodePath)){
       fs.mkdirSync(localCodePath);
   }
@@ -53,7 +52,7 @@ const _doInit = (answer) => {
 
 export const aocInit = (argv) => {
   if (argv.length < 3) {
-    rl.question(`Welke dag van ${YEAR}? `, _doInit);
+    rl.question(`Welke dag van ${settings.Settings.YEAR}? `, _doInit);
     return;
   }
   _doInit(argv[2]);
