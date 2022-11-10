@@ -32,7 +32,8 @@ const _doInit = (answer) => {
   let code = fs.readFileSync(`${__dirname}\\..\\src\\code-template.ts`).toString();
   code = code.replace(/day00/g, name);
   fs.writeFile(localCodePath, code, (err) => {
-    console.log(`Error: ${err}`);
+    if (err)
+      console.log(`Error: ${err}`);
   });
 
 
