@@ -9,8 +9,9 @@ namespace day04 {
 
     const main = (): void => {
         const input = fs.readFileSync(`${__dirname}\\..\\..\\aoc\\day04\\input.txt`).toString().split("\n").slice(0, -1);
+        const sTime = Date.now();
         const result = processInput(input);
-        console.log(`Answer: ${result}`);
+        console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
     }
 
     const splitInput = (input: string[]): string[][] => {
@@ -39,7 +40,7 @@ namespace day04 {
                 if (bc.call(callNum))
                     sCharts.push(bc);
             }
-            if (charts.some(bc => bc.score > -1)) { /** for part two: replace some() by every() */
+            if (charts.every(bc => bc.score > -1)) { /** for part two: replace some() by every() */
                 if (sCharts.length != 1)
                     throw new Error("wtf");
                 return sCharts[0].score;

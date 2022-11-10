@@ -1,3 +1,4 @@
+require('dotenv').config()
 import { aocInit } from "./aoc-init";
 
 class App {

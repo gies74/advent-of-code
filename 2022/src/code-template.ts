@@ -9,8 +9,9 @@ namespace day00 {
 
     const main = (): void => {
         const input = fs.readFileSync(`${__dirname}\\..\\..\\aoc\\day00\\input.txt`).toString().split("\n").slice(0, -1);
+        const sTime = Date.now();
         const result = processInput(input);
-        console.log(`Answer: ${result}`);
+        console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
     }
 
     const splitInput = (input: string[]): string[][] => {
@@ -24,30 +25,22 @@ namespace day00 {
         }, [[]]);
     }
 
-    main();
-
     /** 
-     * day00 specific classes and functions
+     * add code for day00 below
      */
 
      const processInput = (input: string[]): number => {
+
+        // const parts = splitInput(input);
+
         /** insert logic here */
-        const parts = splitInput(input);
-        const charts = parts.slice(1).map(p => new BingoChart(p));
+        
         return 0;
     };
 
-    class BingoChart {
-        /**
-         *
-         */
-        data:number[][] = [];
-
-        constructor(data: string[]) {
-            for (var d of data) {
-                this.data.push(d.split(' ').map(n => parseInt(n)));
-            }
-        }
-    }
+    /** 
+     * add code for day00 above
+     */
+    main();
 
 }

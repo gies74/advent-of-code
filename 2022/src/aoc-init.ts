@@ -13,7 +13,7 @@ const _doInit = (answer) => {
      port:443,
      method: 'GET',
      path:`/2021/day/${answer}/input`, // 9-11-2022 19:29:58
-     headers: { 'cookie': '_ga=GA1.2.1479521940.1668018598; _gid=GA1.2.1114809174.1668018598; session=53616c7465645f5f36645957129ad4228965740b8d3fb4358eec62f009ee2ac3a7846ce8006dc90b0897f83ef943c9424e11e3133f9350db18a552e07125b0d0' }
+     headers: { 'cookie': process.env["AOC_COOKIE"] }
   };
 
   const zeroPadded = `0${answer}`.substring(answer.length - 1);
