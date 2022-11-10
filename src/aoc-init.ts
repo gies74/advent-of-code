@@ -26,15 +26,15 @@ const _doInit = (answer) => {
   const name = `day${zeroPadded}`;
 
   // typescript source code file
-  let localCodePath = `${__dirname}\\..\\src\\${generic.Settings.YEAR}\\${name}`;
+  let localCodePath = `${__dirname}/../src/${generic.Settings.YEAR}/${name}`;
   if (!fs.existsSync(localCodePath)) {
     fs.mkdirSync(localCodePath, { "recursive": true });
   }
-  localCodePath += `\\code.ts`;
+  localCodePath += `/code.ts`;
   if (fs.existsSync(localCodePath)) {
     console.warn(`[WARN] Code file ${path.resolve(localCodePath)} already exists! Please remove manually.`);
   } else {
-    let code = fs.readFileSync(`${__dirname}\\..\\src\\code-template.ts`).toString();
+    let code = fs.readFileSync(`${__dirname}/../src/code-template.ts`).toString();
     code = code.replace(/day00/g, name);
     code = code.replace(/year00/g, generic.Settings.YEAR);
     fs.writeFile(localCodePath, code, (err) => {
@@ -46,13 +46,13 @@ const _doInit = (answer) => {
   }
 
   // input data file
-  let localDataPath = `${__dirname}\\..\\data\\${generic.Settings.YEAR}\\${name}`;
+  let localDataPath = `${__dirname}/../data/${generic.Settings.YEAR}/${name}`;
   if (!fs.existsSync(localDataPath)) {
     fs.mkdirSync(localDataPath, { "recursive": true });
   }
-  localDataPath += `\\input.txt`;
+  localDataPath += `/input.txt`;
 
-  console.info(`[INFO] Attempting to download from ${options.path} to ${localDataPath}`);
+  console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localDataPath)}`);
   https.get(options, (res) => {
     const fileStream = fs.createWriteStream(localDataPath);
     res.pipe(fileStream);

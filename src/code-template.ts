@@ -10,7 +10,7 @@ namespace day00 {
     const generic = require('../../generic');   
 
     const main = (): void => {
-        const input = fs.readFileSync(`${__dirname}\\..\\..\\..\\data\\year00\\day00\\input.txt`).toString().split("\n").slice(0, -1);
+        const input = fs.readFileSync(`${__dirname}/../../../data/year00/day00/input.txt`).toString().split("\n").slice(0, -1);
         const sTime = Date.now();
         const result = processInput(input);
         console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
