@@ -9,7 +9,7 @@ requirements:
 instructions:
 - clone repo and open the root folder in VSCode
 - npm install
-- rename default.env to .env and edit to set the AOC_COOKIE value from an AoC website request header while logged in (press F12, see network tab)
-- choose appropriate value for Settings.YEAR in the ./src/settings.ts
+- rename default.env to .env and edit to set the AOC_COOKIE value to the value of the HTTP request header named 'cookie' from an AoC website request while you are logged in (press F12, see network tab and click any request to see the cookie value).
+- choose an appropriate value for Settings.YEAR in the ./src/settings.ts
 - npm start ; when prompted, enter the day number you'd like to download
-- after download, go to src/{YEAR}/day{DAY}/code.ts, place a breakpoint and launch the run configuration named "Run"
+- finally, go to src/{YEAR}/day{DAY}/code.ts, place a breakpoint and launch the run configuration named "Run"
