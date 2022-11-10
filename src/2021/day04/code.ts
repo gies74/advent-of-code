@@ -15,24 +15,13 @@ namespace day04 {
         console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
     }
 
-    const splitInput = (input: string[]): string[][] => {
-        return input.reduce((agg: string[][], elt:string) => {
-            if (!elt) {
-                agg.push([]);
-            } else {
-                agg[agg.length - 1].push(elt);
-            }
-            return agg;
-        }, [[]]);
-    }
-
     /** 
      * day04 specific classes and functions
      */
 
      const processInput = (input: string[]): number => {
         /** insert logic here */
-        const parts = splitInput(input);
+        const parts = generic.Utils.splitInput(input);
         const charts = parts.slice(1).map(p => new BingoChart(p));
         const callNums = parts[0][0].split(/,/).map(s => parseInt(s));
         for (var callNum of callNums) {

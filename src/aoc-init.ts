@@ -41,7 +41,7 @@ const _doInit = (answer) => {
       if (err)
         console.error(`[ERR] Error: ${err}`);
       else 
-        console.info(`[INFO] Code file ${localCodePath} succesfully prepared.`)
+        console.info(`[INFO] Code file ${path.resolve(localCodePath)} succesfully prepared.`)
     });
   }
 
