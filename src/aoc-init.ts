@@ -1,5 +1,5 @@
 import * as readline from 'readline';
-import * as settings from './settings';
+import * as generic from './generic';
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -14,7 +14,7 @@ const _doInit = (answer) => {
     host: `adventofcode.com`,
     port: 443,
     method: 'GET',
-    path: `/${settings.Settings.YEAR}/day/${answer}/input`, // 9-11-2022 19:29:58
+    path: `/${generic.Settings.YEAR}/day/${answer}/input`, // 9-11-2022 19:29:58
     headers: {
       cookie: process.env["AOC_COOKIE"]
       , 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
@@ -26,7 +26,7 @@ const _doInit = (answer) => {
   const name = `day${zeroPadded}`;
 
   // typescript source code file
-  let localCodePath = `${__dirname}\\..\\src\\${settings.Settings.YEAR}\\${name}`;
+  let localCodePath = `${__dirname}\\..\\src\\${generic.Settings.YEAR}\\${name}`;
   if (!fs.existsSync(localCodePath)) {
     fs.mkdirSync(localCodePath, { "recursive": true });
   }
@@ -45,7 +45,7 @@ const _doInit = (answer) => {
   }
 
   // input data file
-  let localDataPath = `${__dirname}\\..\\data\\${settings.Settings.YEAR}\\${name}`;
+  let localDataPath = `${__dirname}\\..\\data\\${generic.Settings.YEAR}\\${name}`;
   if (!fs.existsSync(localDataPath)) {
     fs.mkdirSync(localDataPath, { "recursive": true });
   }
@@ -65,7 +65,7 @@ const _doInit = (answer) => {
 
 export const aocInit = (argv) => {
   if (argv.length < 3) {
-    rl.question(`Welke dag van ${settings.Settings.YEAR}? `, _doInit);
+    rl.question(`Welke dag van ${generic.Settings.YEAR}? `, _doInit);
     return;
   }
   _doInit(argv[2]);

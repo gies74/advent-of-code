@@ -1,29 +1,19 @@
 /**
  * Advent of Code 
  * (c) 2022 Gies Bouwman
+ * gies.bouwman@alliander.com
  * All rights reserved.
  */
 
 namespace day00 {
     const fs = require("fs");
-    const settings = require('../../settings');   
+    const generic = require('../../generic');   
 
     const main = (): void => {
-        const input = fs.readFileSync(`${__dirname}\\..\\..\\..\\data\\${settings.Settings.YEAR}\\day00\\input.txt`).toString().split("\n").slice(0, -1);
+        const input = fs.readFileSync(`${__dirname}\\..\\..\\..\\data\\${generic.Settings.YEAR}\\day00\\input.txt`).toString().split("\n").slice(0, -1);
         const sTime = Date.now();
         const result = processInput(input);
         console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
-    }
-
-    const splitInput = (input: string[]): string[][] => {
-        return input.reduce((agg: string[][], elt:string) => {
-            if (!elt) {
-                agg.push([]);
-            } else {
-                agg[agg.length - 1].push(elt);
-            }
-            return agg;
-        }, [[]]);
     }
 
     /** 
@@ -32,7 +22,7 @@ namespace day00 {
 
      const processInput = (input: string[]): number => {
 
-        // const parts = splitInput(input);
+        // const parts = generic.Utils.splitInput(input);
 
         /** insert logic here */
         
