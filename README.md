@@ -7,7 +7,7 @@ requirements:
 - Latest VSCode and Node installed
 
 instructions:
-- clone repo and open main folder in VSCode
+- clone repo and open the root folder in VSCode
 - npm install
 - rename default.env to .env and edit to set the AOC_COOKIE value from an AoC website request header while logged in (press F12, see network tab)
 - choose appropriate value for Settings.YEAR in the ./src/settings.ts
