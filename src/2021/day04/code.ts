@@ -1,44 +1,14 @@
 /**
- * Advent of Code 
+ * Advent of Code solution 2021/day04
  * (c) 2022 Gies Bouwman
+ * gies.bouwman@alliander.com
  * All rights reserved.
  */
 
 namespace day04 {
-    const fs = require("fs");
     const generic = require('../../generic');   
 
-    const main = (): void => {
-        const input = fs.readFileSync(`${__dirname}/../../../data/2021/day04/input.txt`).toString().split("\n").slice(0, -1);
-        const sTime = Date.now();
-        const result = processInput(input);
-        console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
-    }
-
-    /** 
-     * day04 specific classes and functions
-     */
-
-     const processInput = (input: string[]): number => {
-        /** insert logic here */
-        const parts = generic.Utils.splitInput(input);
-        const charts = parts.slice(1).map(p => new BingoChart(p));
-        const callNums = parts[0][0].split(/,/).map(s => parseInt(s));
-        for (var callNum of callNums) {
-            const sCharts: BingoChart[] = []
-            for (var bc of charts) {
-                if (bc.call(callNum))
-                    sCharts.push(bc);
-            }
-            if (charts.every(bc => bc.score > -1)) { /** for part two: replace some() by every() */
-                if (sCharts.length != 1)
-                    throw new Error("wtf");
-                return sCharts[0].score;
-            }
-        }
-        return -1;
-    };
-
+    /** ADD 2021-day01 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
     class BingoChart {
         /**
          * 
@@ -75,8 +45,25 @@ namespace day04 {
         }
     }
 
-    
-    main();
+    generic.Utils.main((input) => {
+        var parts = generic.Utils.splitInput(input);
 
+        /** ADD START HERE */
+        const charts = parts.slice(1).map(p => new BingoChart(p));
+        const callNums = parts[0][0].split(/,/).map(s => parseInt(s));
+        for (var callNum of callNums) {
+            const sCharts: BingoChart[] = []
+            for (var bc of charts) {
+                if (bc.call(callNum))
+                    sCharts.push(bc);
+            }
+            if (charts.every(bc => bc.score > -1)) { /** for part two: replace some() by every() */
+                if (sCharts.length != 1)
+                    throw new Error("wtf");
+                return sCharts[0].score;
+            }
+        }
+        return -1;
 
+    }, "2021", "day04");    
 }

@@ -1,37 +1,23 @@
 /**
- * Advent of Code 
+ * Advent of Code solution year00/day00
  * (c) 2022 Gies Bouwman
  * gies.bouwman@alliander.com
  * All rights reserved.
  */
 
 namespace day00 {
-    const fs = require("fs");
-    const generic = require('../../generic');   
+    const generic = require('../../generic');
+    
+    /** ADD year00-day00 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
-    const main = (): void => {
-        const input = fs.readFileSync(`${__dirname}/../../../data/year00/day00/input.txt`).toString().split("\n").slice(0, -1);
-        const sTime = Date.now();
-        const result = processInput(input);
-        console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
-    }
+    generic.Utils.main((input) => {
 
-    /** 
-     * add code for day00 below
-     */
+        var parts = generic.Utils.splitInput(input);
 
-     const processInput = (input: string[]): number => {
+        /** ADD START HERE */
 
-        // const parts = generic.Utils.splitInput(input);
-
-        /** insert logic here */
-        
         return 0;
-    };
 
-    /** 
-     * add code for day00 above
-     */
-    main();
+    }, "year00", "day00");
 
 }
