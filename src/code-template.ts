@@ -12,7 +12,7 @@ namespace day00 {
 
     generic.Utils.main((input) => {
 
-        var parts = generic.Utils.splitInput(input);
+        // var parts = generic.Utils.splitInput(input);
 
         /** ADD START HERE */
 
