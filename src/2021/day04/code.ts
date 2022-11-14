@@ -45,7 +45,7 @@ namespace day04 {
         }
     }
 
-    generic.Utils.main((input) => {
+    generic.Utils.main(input => {
         var parts = generic.Utils.splitInput(input);
 
         /** ADD START HERE */
