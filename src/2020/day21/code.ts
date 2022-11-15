@@ -38,7 +38,7 @@ namespace day21 {
             }
         }
 
-        var possibleIngrsPerAll = {};
+        var possibleIngrsPerAll: {[nm: string]: Set<string>} = {};
         for (var allergen in ingrSetsByAll) {
             let myset = ingrSetsByAll[allergen][0];
             for (var i=1; i<ingrSetsByAll[allergen].length; i++)
@@ -46,9 +46,42 @@ namespace day21 {
             possibleIngrsPerAll[allergen] = myset;
         }
 
+        var definiteIngrToAll: {[key: string]: string} = {};
+        var progress = true;
+        while (possibleIngrsPerAll && progress) {
+            progress = false;
+            var key = Object.keys(possibleIngrsPerAll).find(a => possibleIngrsPerAll[a].size == 1);
+            if (!key)
+                break;
+            progress = true;
+            var val2del = [...possibleIngrsPerAll[key]][0];
+            delete possibleIngrsPerAll[key];
+            definiteIngrToAll[val2del] = key;
+            for (var set of Object.values(possibleIngrsPerAll)) {
+                set.delete(val2del);
+            }
+        }
+        if (!possibleIngrsPerAll) {
+            console.error("Did not resolve all!!!");
+        }
+
+        var count = 0;
+        for (var line of input) {
+            const ilist = line.replace(/(.*) \(contains .*\)/, "$1");
+            const ingrs = ilist.split(" ");
+            for (var ingr of ingrs) {
+                if (!definiteIngrToAll[ingr])
+                    count++;
+            }
+        }
+
+        var ingredients = Object.keys(definiteIngrToAll);
+        ingredients.sort((a,b) => definiteIngrToAll[a] < definiteIngrToAll[b] ? -1 : 1);
+        console.log(`${ingredients.join(',')}`);
 
 
-        return 0;
+
+        return count;
 
     }, "2020", "day21");
 
