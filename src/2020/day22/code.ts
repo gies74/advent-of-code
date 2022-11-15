@@ -13,7 +13,7 @@ namespace day22 {
     /** ADD 2020-day22 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
     let GAME_ID = 1;
 
-    const recursiveCombat = (deck1: number[], deck2: number[]): any => {
+    const recursiveCombat = (deck1: number[], deck2: number[]): any[] => {
         var game_id = GAME_ID++;
         var round_id = 1;
         const deck1Hashes = {};
@@ -22,7 +22,7 @@ namespace day22 {
             const deck1Hash = deck1.map(c => String(c)).join(",");
             const deck2Hash = deck2.map(c => String(c)).join(",");
             // console.info(`Round ${round_id++} (Game ${game_id}) d1=[${deck1Hash}] d2=[${deck2Hash}]`);
-            if (deck1Hashes[deck1Hash] || deck1Hashes[deck1Hash]) {
+            if (deck1Hashes[deck1Hash] || deck2Hashes[deck2Hash]) {
                 return [true, game_id];
             }
             deck1Hashes[deck1Hash] = true;
@@ -34,7 +34,7 @@ namespace day22 {
             var gid = 0, p1Wins = true;
             if (c1 <= deck1.length && c2 <= deck2.length) {
                 [p1Wins, gid] = recursiveCombat(deck1.slice(0, c1), deck2.slice(0, c2));
-                console.info(`Game ${gid} won by ${p1Wins ? "p1": "p2"}, anyway back to game ${game_id}`);
+                // console.info(`Game ${gid} won by ${p1Wins ? "p1": "p2"}, anyway back to game ${game_id}`);
             }
             else {
                 p1Wins = c1 > c2;
