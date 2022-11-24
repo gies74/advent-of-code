@@ -3,7 +3,6 @@
 download puzzle input and instantiate a typescript code file
 
 requirements:
-- Win10
 - Latest VSCode and Node installed
 
 instructions (once only):
