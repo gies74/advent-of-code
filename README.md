@@ -1,6 +1,6 @@
-# advent-of-code
+# Advent of Code
 
-download puzzle input and instantiate a typescript code file
+Typescript code to retrieve daily puzzle input and instantiate a fresh typescript code file
 
 requirements:
 - Latest VSCode and Node installed
