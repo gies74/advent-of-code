@@ -23,8 +23,8 @@ namespace day00 {
             // split input in empty line delimited subparts
             // var parts = generic.Utils.splitInput(input);
 
-            let answer_part1 = 0;
-            let answer_part2 = 0;
+            let answerPart1 = 0;
+            let answerPart2 = 0;
 
             /** ENTER 
              * CODE
@@ -32,10 +32,10 @@ namespace day00 {
 
             if (part == Part.One) {
                 /** part 1 specific code here */
-                return answer_part1;
+                return answerPart1;
             } else {
                 /** part 2 specific code here */
-                return answer_part2;
+                return answerPart2;
             }
 
         }, "year00", "day00", 
