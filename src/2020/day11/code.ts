@@ -78,15 +78,12 @@ namespace day11 {
                 while (round(4, false)) {
                     // nothing;
                 }
-
                 answerPart1 = countOccup();
-
                 return answerPart1;
             } else {
                 while (round(5, true)) {
                     // nothing;
                 }
-
                 answerPart2 = countOccup();
                 return answerPart2;
             }
