@@ -27,31 +27,35 @@ namespace day10 {
         return num;
     };
 
-    generic.Utils.main((input) => {
+    generic.Utils.main((input, part) => {
 
         // var parts = generic.Utils.splitInput(input);
 
         /** ADD START HERE */
 
-        // var step3=1;
-        // var step1=0;
+
 
         const inputInt = input.map(j => parseInt(j));
         inputInt.push(0);
-        // inputInt.sort((a,b) => Math.sign(b - a));
-        // for (var idx = 0; idx < inputInt.length - 1; idx++) {
-        //     if (inputInt[idx + 1] == inputInt[idx] - 1)
-        //         step1++;
-        //     else if (inputInt[idx + 1] == inputInt[idx] - 3)
-        //         step3++;
-        //     else 
-        //         var x = 0;
-        // }
-        // return step1 * step3;
 
-        return countNumConfigs(inputInt, Math.max(...inputInt) + 3);
+        if (part == generic.Part.One) {
+            var step3=1;
+            var step1=0;
+            inputInt.sort((a,b) => Math.sign(b - a));
+            for (var idx = 0; idx < inputInt.length - 1; idx++) {
+                if (inputInt[idx + 1] == inputInt[idx] - 1)
+                    step1++;
+                else if (inputInt[idx + 1] == inputInt[idx] - 3)
+                    step3++;
+                else 
+                    var x = 0;
+            }
+            return step1 * step3;        
+        } else {
+            return countNumConfigs(inputInt, Math.max(...inputInt) + 3);
+        }
 
 
-    }, "2020", "day10");
+    }, "2020", "day10", generic.Part.Two);
 
 }

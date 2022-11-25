@@ -5,6 +5,8 @@
  * All rights reserved.
  */
 
+import { Part } from "../../generic";
+
 namespace day24 {
     const generic = require('../../generic');
     
@@ -84,9 +86,10 @@ namespace day24 {
 
 
 
-    generic.Utils.main((input) => {
+    generic.Utils.main((input: string[], part: Part = Part.One) => {
 
         /** ADD START HERE */
+
 
         
         input = ["sesenwnenenewseeswwswswwnenewsewsw",
@@ -140,6 +143,6 @@ namespace day24 {
             
         return totBlack;
 
-    }, "2020", "day24");
+    }, "2020", "day24", Part.Two);
 
 }
