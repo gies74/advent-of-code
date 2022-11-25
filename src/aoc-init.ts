@@ -37,6 +37,7 @@ const _doInit = (answer) => {
     let code = fs.readFileSync(`${__dirname}/../src/code-template.ts`).toString();
     code = code.replace(/day00/g, name);
     code = code.replace(/year00/g, generic.Settings.YEAR);
+    code = code.replace("./generic", "../../generic");
     fs.writeFile(localCodePath, code, (err) => {
       if (err)
         console.error(`[ERR] Error: ${err}`);

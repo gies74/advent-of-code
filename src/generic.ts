@@ -4,6 +4,11 @@ export class Settings {
     public static readonly YEAR = 2020;
 }
 
+export enum Part {
+    One = 1,
+    Two = 2
+}
+
 export class Utils {
 
     /**
@@ -13,11 +18,11 @@ export class Utils {
      * @param year Given year
      * @param day Given day
      */
-    public static main = (processFunc: (input: string[]) => any, year: number, day: string) : void => {
+    public static main = (processFunc: (input: string[], part: Part) => any, year: string, day: string, part: Part = Part.One) : void => {
         const input = fs.readFileSync(`${__dirname}/../data/${year}/${day}/input.txt`).toString().split("\n").slice(0, -1);
         const sTime = Date.now();
-        const result = processFunc(input);
-        console.log(`Answer: ${result} (calc time: ${Date.now() - sTime} ms)`);
+        const result = processFunc(input, part);
+        console.log(`Answer part ${part}: ${result} (time elapsed: ${Date.now() - sTime} ms)`);
     }
 
     /**

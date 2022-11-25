@@ -5,19 +5,40 @@
  * All rights reserved.
  */
 
+import { Part, Utils } from "./generic";
+
 namespace day00 {
-    const generic = require('../../generic');
     
     /** ADD year00-day00 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
-    generic.Utils.main((input) => {
+    Utils.main(
+        /**
+         * Main entry point of this day's code
+         * @param input this day's input
+         * @param part report answer for either part one or two
+         * @returns sought answer of given puzzle part
+         */
+        (input: string[], part: Part) => {
+            
+            // split input in empty line delimited subparts
+            // var parts = generic.Utils.splitInput(input);
 
-        // var parts = generic.Utils.splitInput(input);
+            let answer_part1 = 0;
+            let answer_part2 = 0;
 
-        /** ADD START HERE */
+            /** ENTER 
+             * CODE
+             * HERE */
 
-        return 0;
+            if (part == Part.One) {
+                /** part 1 specific code here */
+                return answer_part1;
+            } else {
+                /** part 2 specific code here */
+                return answer_part2;
+            }
 
-    }, "year00", "day00");
-
+        }, "year00", "day00", 
+        // set this switch to Part.Two once you've finished part one.
+        Part.One);
 }
