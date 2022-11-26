@@ -10,16 +10,6 @@ const rl = readline.createInterface({
 });
 
 const _doInit = (answer) => {
-  const options = {
-    host: `adventofcode.com`,
-    port: 443,
-    method: 'GET',
-    path: `/${generic.Settings.YEAR}/day/${answer}/input`, // 9-11-2022 19:29:58
-    headers: {
-      cookie: process.env["AOC_COOKIE"]
-      , 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
-    }
-  };
 
   // general variables
   const zeroPadded = `0${answer}`.substring(answer.length - 1);
@@ -48,21 +38,38 @@ const _doInit = (answer) => {
 
   // input data file
   let localDataPath = `${__dirname}/../data/${generic.Settings.YEAR}/${name}`;
-  if (!fs.existsSync(localDataPath)) {
-    fs.mkdirSync(localDataPath, { "recursive": true });
-  }
-  localDataPath += `/input.txt`;
 
-  console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localDataPath)}`);
-  https.get(options, (res) => {
-    const fileStream = fs.createWriteStream(localDataPath);
-    res.pipe(fileStream);
-    fileStream.on('finish', () => {
-      fileStream.close();
-      console.info('[INFO] Download complete!');
-      process.exit();
+
+  const downloads = [{"path": "/input", "localPath": "input.txt"}, {"path": "", "localPath": "puzzle.html"}, {"path": "../../../static/style.css", "localPath": "static/style.css"}];
+
+  downloads.forEach(async spec => { 
+    const options = {
+      host: `adventofcode.com`,
+      port: 443,
+      method: 'GET',
+      path: `/${generic.Settings.YEAR}/day/${answer}${spec.path}`, // 9-11-2022 19:29:58
+      headers: {
+        cookie: process.env["AOC_COOKIE"]
+        , 'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
+      }
+    };
+
+    const localFilePath = `${localDataPath}/${spec.localPath}`;
+    if (!fs.existsSync(localFilePath)) {
+      fs.mkdirSync(localFilePath, { "recursive": true });
+    }
+
+    console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localFilePath)}`);
+    await https.get(options, (res) => {
+      const fileStream = fs.createWriteStream(localFilePath);
+      res.pipe(fileStream);
+      fileStream.on('finish', () => {
+        fileStream.close();
+        console.info('[INFO] Download complete!');
+        process.exit();
+      });
     });
-  });
+  }); 
 };
 
 export const aocInit = (argv) => {
