@@ -9,7 +9,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const _doInit = (answer) => {
+const _doInit = async (answer) => {
 
   // general variables
   const zeroPadded = `0${answer}`.substring(answer.length - 1);
@@ -40,9 +40,10 @@ const _doInit = (answer) => {
   let localDataPath = `${__dirname}/../data/${generic.Settings.YEAR}/${name}`;
 
 
-  const downloads = [{"path": "/input", "localPath": "input.txt"}, {"path": "", "localPath": "puzzle.html"}, {"path": "../../../static/style.css", "localPath": "static/style.css"}];
+  const downloads = [{"path": "/input", "localPath": "input.txt"}, {"path": "", "localPath": "puzzle.html"}];
 
-  downloads.forEach(async spec => { 
+
+  const promises = downloads.map(async spec => new Promise(async (resolve) => { 
     const options = {
       host: `adventofcode.com`,
       port: 443,
@@ -55,8 +56,8 @@ const _doInit = (answer) => {
     };
 
     const localFilePath = `${localDataPath}/${spec.localPath}`;
-    if (!fs.existsSync(localFilePath)) {
-      fs.mkdirSync(localFilePath, { "recursive": true });
+    if (!fs.existsSync(path.dirname(localFilePath))) {
+      fs.mkdirSync(path.dirname(localFilePath), { "recursive": true });
     }
 
     console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localFilePath)}`);
@@ -65,11 +66,26 @@ const _doInit = (answer) => {
       res.pipe(fileStream);
       fileStream.on('finish', () => {
         fileStream.close();
-        console.info('[INFO] Download complete!');
-        process.exit();
+        resolve(true);
       });
     });
-  }); 
+  }));
+  await Promise.all(promises); 
+  console.info('[INFO] All downloads complete!');
+
+  let html = fs.readFileSync(`${localDataPath}/puzzle.html`).toString();
+  html = html.replace("/static/style.css", "../../static/style.css");
+  fs.writeFile(`${localDataPath}/puzzle.html`, html, (err) => {
+    if (err)
+      console.error(`[ERR] Error: ${err}`);
+    else 
+      console.info(`[INFO] Code file ${path.resolve(localCodePath)} succesfully prepared.`)
+    process.exit();
+  });
+
+
+
+
 };
 
 export const aocInit = (argv) => {

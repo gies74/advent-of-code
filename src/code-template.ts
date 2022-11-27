@@ -20,8 +20,8 @@ namespace day00 {
          */
         (input: string[], part: Part) => {
             
-            // split input in empty line delimited subparts
-            // var parts = generic.Utils.splitInput(input);
+            // split input in empty line delimited chunks
+            // var chunks = Utils.splitInput(input);
 
             let answerPart1 = 0;
             let answerPart2 = 0;

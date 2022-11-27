@@ -43,10 +43,10 @@ namespace day13 {
                 for (var v=1; v<busLines.length; v++) {
                     const bL = busLines[v];
                     const xIndex = busLinesX.indexOf(bL);
-                    const target = (100 * bL - xIndex) % bL;
+                    const tgtDepartureDelta = (100 * bL - xIndex) % bL;
                     let factor;
                     for (factor=1;factor<bL;factor++) {
-                        if (multipliers.reduce((agg, e, i) => e + agg * busLines[multipliers.length -1 -i], factor) % bL == target) {
+                        if (multipliers.reduce((agg, e, i) => e + agg * busLines[multipliers.length -1 -i], factor) % bL == tgtDepartureDelta) {
                             const t = multipliers.reduce((agg, e, i) => e + agg * busLines[multipliers.length -1 -i], factor);
                             multipliers.unshift(factor);
                             break;
