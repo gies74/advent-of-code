@@ -20,12 +20,29 @@ namespace day14 {
          */
         (input: string[], part: Part) => {
             
-            //var chunks = Utils.splitInput(input);
+            // input = [
+            //     "mask = 000000000000000000000000000000X1001X",
+            //     "mem[42] = 100",
+            //     "mask = 00000000000000000000000000000000X0XX",
+            //     "mem[26] = 1"
+            // ]
 
             let answerPart1 = 0;
             let answerPart2 = 0;
 
             const mem : {[name:string]: number} = {};
+
+            const assignMem = (mem, subject, mask) => {
+                if (!/X/.test(mask)) {
+                    const actualAddress = Number(BigInt(parseInt(mask, 2)));
+                    mem[actualAddress] = subject;
+                    return;
+                }
+                assignMem(mem, subject, mask.replace(/X/, 0));
+                assignMem(mem, subject, mask.replace(/X/, 1));
+            };
+
+
 
             let mask = "";
             let maskAnd;
@@ -43,24 +60,35 @@ namespace day14 {
                 const elts = line.split(/[/[\] ]/g);
                 if (elts.length != 5)
                     throw Error("Wtf");
-                const subject = BigInt(parseInt(elts[4]));
-                const val = Number(subject & maskAnd | maskOr);
-                if (val < -1 || val > maskAnd) {
-                    throw Error("Wtf2");
+                let subject, address;
+                if (part == Part.One) {
+                    subject = BigInt(parseInt(elts[4]));
+                    address = BigInt(parseInt(elts[1]));
+                    const val = Number(subject & maskAnd | maskOr);
+                    if (val < -1 || val > maskAnd) {
+                        throw Error("Wtf2");
+                    }
+                    mem[elts[1]] = val;
+                } else {
+                    subject = (parseInt(elts[4]));
+                    address = BigInt(parseInt(elts[1]));
+                    const mask0 = mask.replace(/X/g, '0');
+                    const mask0dec = BigInt(parseInt(mask0, 2));
+                    const addressMasked = ((address | mask0dec).toString(2));
+                    let result = "00000000000000000000000000000000000000000000" + addressMasked;
+                    result = result.substring(result.length-36);
+                    mask.split('').forEach((c, i) => {
+                        if (c == 'X')
+                            result = result.substring(0, i) + 'X' + result.substring(i+1);
+                    })
+                    assignMem(mem, subject, result);
                 }
-                mem[elts[1]] = val;
             }
 
-            if (part == Part.One) {
-                var x = Object.values(mem).reduce((agg, e) => agg + e, 0);
-                answerPart1 = x;
-                return answerPart1;
-            } else {
-                /** part 2 specific code here */
-                return answerPart2;
-            }
+            var x = Object.values(mem).reduce((agg, e) => agg + e, 0);
+            return x;
 
         }, "2020", "day14", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One);
+        Part.Two);
 }
