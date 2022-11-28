@@ -75,17 +75,9 @@ const _doInit = async (answer) => {
 
   let html = fs.readFileSync(`${localDataPath}/puzzle.html`).toString();
   html = html.replace("/static/style.css", "../../static/style.css");
-  fs.writeFile(`${localDataPath}/puzzle.html`, html, (err) => {
-    if (err)
-      console.error(`[ERR] Error: ${err}`);
-    else 
-      console.info(`[INFO] Code file ${path.resolve(localCodePath)} succesfully prepared.`)
+  fs.writeFile(`${localDataPath}/puzzle.html`, html, () => {
     process.exit();
   });
-
-
-
-
 };
 
 export const aocInit = (argv) => {
