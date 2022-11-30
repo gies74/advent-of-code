@@ -1,6 +1,6 @@
 # Advent of Code
 
-Typescript code to retrieve daily puzzle input and instantiate a fresh typescript code file.And my solutions of course.
+Typescript code to retrieve daily puzzle input and instantiate a fresh typescript code file. As well as my solutions to the puzzles.
 
 requirements:
 - Latest VSCode and Node installed
