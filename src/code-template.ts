@@ -40,5 +40,5 @@ namespace day00 {
 
         }, "year00", "day00", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One);
+        Part.One, 0);
 }
