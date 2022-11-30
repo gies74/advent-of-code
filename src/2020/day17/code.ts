@@ -92,5 +92,5 @@ namespace day17 {
 
         }, "2020", "day17", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 2);
+        Part.One);
 }
