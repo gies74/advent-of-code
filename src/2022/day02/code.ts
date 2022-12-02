@@ -9,8 +9,6 @@ import { Part, Utils } from "../../generic";
 
 namespace day02 {
 
-    /** ADD 2022-day02 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
-
     Utils.main(
         /**
          * Main entry point of this day's code
@@ -27,32 +25,27 @@ namespace day02 {
                 "Scissors": { "beats": "Paper", "score": 3 }
             };
 
-
+            let score = 0;
             if (part == Part.One) {
                 const myTurn = { "X": "Rock", "Y": "Paper", "Z": "Scissors" }
-                let score = 0;
                 for (var line of input) {
                     const [elve, my] = line.split(' ');
-                    const eO = elveTurn[elve];
-                    const mO = myTurn[my];
-                    score += game[mO].score;
-                    score += (mO == eO) ? 3 : game[mO].beats == eO ? 6 : 0;
+                    const eHand = elveTurn[elve];
+                    const mHand = myTurn[my];
+                    score += game[mHand].score;
+                    score += (mHand == eHand) ? 3 : game[mHand].beats == eO ? 6 : 0;
                 }
-                let answerPart1 = score;
-                return answerPart1;
             } else {
-                let score = 0;
-                const myWinscore = { "X": 0, "Y": 3, "Z": 6 };
+                const winscore = { "X": 0, "Y": 3, "Z": 6 };
                 for (var line of input) {
                     const [elve, my] = line.split(' ');
-                    const eO = elveTurn[elve];
-                    const mWs = myWinscore[my];
-                    score += mWs == 3 ? game[eO].score : mWs == 0 ? game[game[eO].beats].score : game[game[game[eO].beats].beats].score;
-                    score += myWinscore[my];
+                    const eHand = elveTurn[elve];
+                    const mWinscore = winscore[my];
+                    score += mWinscore == 3 ? game[eHand].score : mWinscore == 0 ? game[game[eHand].beats].score : game[game[game[eHand].beats].beats].score;
+                    score += mWinscore;
                 }
-                let answerPart2 = score;
-                return answerPart2;
             }
+            return score;            
 
         }, "2022", "day02",
         // set this switch to Part.Two once you've finished part one.
