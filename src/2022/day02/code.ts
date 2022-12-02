@@ -33,7 +33,7 @@ namespace day02 {
                     const eHand = elveTurn[elve];
                     const mHand = myTurn[my];
                     score += game[mHand].score;
-                    score += (mHand == eHand) ? 3 : game[mHand].beats == eO ? 6 : 0;
+                    score += (mHand == eHand) ? 3 : game[mHand].beats == eHand ? 6 : 0;
                 }
             } else {
                 const winscore = { "X": 0, "Y": 3, "Z": 6 };
