@@ -1,3 +1,5 @@
+import { Console } from 'console';
+import { exit } from 'process';
 import * as readline from 'readline';
 import * as generic from './generic';
 const path = require('path');
@@ -10,6 +12,11 @@ const rl = readline.createInterface({
 });
 
 const _doInit = async (answer) => {
+
+  if (!process.env["AOC_COOKIE"] || process.env["AOC_COOKIE"].length < 100) {
+    console.error(`Please read README.md, it looks like .env file has no valid AoC cookie!`);
+    exit(0);
+  }
 
   // general variables
   const zeroPadded = `0${answer}`.substring(answer.length - 1);
