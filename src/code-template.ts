@@ -20,25 +20,30 @@ namespace day00 {
          */
         (input: string[], part: Part) => {
             
-            // split input in empty line delimited chunks
-            // var chunks = Utils.splitInput(input);
+            // part aspecific code here
 
+            // split input in case it has empty line delimited chunks
+            // var chunks = Utils.splitInput(input);
             let answerPart1 = 0;
             let answerPart2 = 0;
 
-            /** ENTER 
-             * CODE
-             * HERE */
-
             if (part == Part.One) {
-                /** part 1 specific code here */
+
+                // part 1 specific code here
+
                 return answerPart1;
+
             } else {
-                /** part 2 specific code here */
+
+                // part 2 specific code here
+
                 return answerPart2;
+
             }
 
         }, "year00", "day00", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 0);
+        Part.One, 
+        // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
+        0);
 }
