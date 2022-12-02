@@ -8,7 +8,7 @@
 import { Part, Utils } from "../../generic";
 
 namespace day02 {
-    
+
     /** ADD 2022-day02 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
     Utils.main(
@@ -21,10 +21,10 @@ namespace day02 {
         (input: string[], part: Part) => {
 
             const elveTurn = { "A": "Rock", "B": "Paper", "C": "Scissors" }
-            const game = { 
-                "Rock": {"beats":"Scissors", "score":1}, 
-                "Paper": {"beats":"Rock", "score":2}, 
-                "Scissors": {"beats":"Paper", "score": 3}
+            const game = {
+                "Rock": { "beats": "Scissors", "score": 1 },
+                "Paper": { "beats": "Rock", "score": 2 },
+                "Scissors": { "beats": "Paper", "score": 3 }
             };
 
 
@@ -42,19 +42,19 @@ namespace day02 {
                 return answerPart1;
             } else {
                 let score = 0;
-                const myTurn = { "X": 0, "Y": 3, "Z": 6 };
+                const myWinscore = { "X": 0, "Y": 3, "Z": 6 };
                 for (var line of input) {
                     const [elve, my] = line.split(' ');
                     const eO = elveTurn[elve];
-                    const mS = myTurn[my];
-                    score += mS == 3 ? game[eO].score : mS==0 ? game[game[eO].beats].score : game[game[game[eO].beats].beats].score;
-                    score += myTurn[my];
+                    const mWs = myWinscore[my];
+                    score += mWs == 3 ? game[eO].score : mWs == 0 ? game[game[eO].beats].score : game[game[game[eO].beats].beats].score;
+                    score += myWinscore[my];
                 }
                 let answerPart2 = score;
                 return answerPart2;
             }
 
-        }, "2022", "day02", 
+        }, "2022", "day02",
         // set this switch to Part.Two once you've finished part one.
         Part.Two);
 }
