@@ -219,6 +219,16 @@ var puzzles = {
 	new Mushroom(4,2),
 	new Mushroom(4,4)
   ],
+  "p57": [
+    new Rabbit(0,0),
+    new Rabbit(1,1),
+    new Rabbit(1,3),
+	new Fox(3,1,true),
+	new Fox(3,3,true),
+	new Mushroom(2,2),
+	new Mushroom(1,4),
+	new Mushroom(4,4)
+  ],
   "p60": [
     new Rabbit(3,1),
     new Rabbit(4,2),
@@ -235,7 +245,7 @@ var puzzles = {
 //input = [  "v.>.",  "...>",  "v...",  "...."];
 function start() {
   statuses = {};
-  var initObjects = puzzles["p60"];
+  var initObjects = puzzles["p57"];
   var init = new BordStatus(null, initObjects);
   statuses[init.toString()] = {"explored": false, "bordStatus": init, "from": null, "move": null };
   var sDate = Date.now();
@@ -249,26 +259,27 @@ function start() {
 
 }
 
-function solve() {
-  unexploredStatus = Object.values(statuses).find(s => !s.explored);
-  if (!unexploredStatus) {
-	console.error("No solution possible");
-	return null;
+function solve() {  
+  var unexploredStatus = Object.values(statuses).find(s => !s.explored);
+  while (!!unexploredStatus) {
+	  var bordStatus = unexploredStatus.bordStatus;
+	  if (bordStatus.isSolved()) {
+		console.log("Solution found");
+		return unexploredStatus;
+	  }
+	  var allMoves = bordStatus.objects.map(o => o.findAllMoves()).flat();
+	  for (var move of allMoves) {
+		var newStatus = bordStatus.moveObject(move);
+		if (!statuses[newStatus.toString()]) {
+		  statuses[newStatus.toString()] = {"explored": false, "bordStatus": newStatus, "from": unexploredStatus, "move": move };
+		}
+	  }
+	  unexploredStatus.explored = true;	  
+      unexploredStatus = Object.values(statuses).find(s => !s.explored);
   }
-  var bordStatus = unexploredStatus.bordStatus;
-  if (bordStatus.isSolved()) {
-    console.log("Solution found");
-	return unexploredStatus;
-  }
-  var allMoves = bordStatus.objects.map(o => o.findAllMoves()).flat();
-  for (var move of allMoves) {
-    var newStatus = bordStatus.moveObject(move);
-	if (!statuses[newStatus.toString()]) {
-	  statuses[newStatus.toString()] = {"explored": false, "bordStatus": newStatus, "from": unexploredStatus, "move": move };
-	}
-  }
-  unexploredStatus.explored = true;
-  return solve();
+  //console.log(`Size ${Object.keys(statuses).length}`);
+  console.error("No solution possible");
+  return null;
 }
 
 function printMoves(solvedStatus) {
