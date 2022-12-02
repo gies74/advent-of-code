@@ -36,13 +36,13 @@ namespace day02 {
                     score += (mHand == eHand) ? 3 : game[mHand].beats == eHand ? 6 : 0;
                 }
             } else {
-                const winscore = { "X": 0, "Y": 3, "Z": 6 };
+                const myWinscore = { "X": 0, "Y": 3, "Z": 6 };
                 for (var line of input) {
                     const [elve, my] = line.split(' ');
                     const eHand = elveTurn[elve];
-                    const mWinscore = winscore[my];
-                    score += mWinscore == 3 ? game[eHand].score : mWinscore == 0 ? game[game[eHand].beats].score : game[game[game[eHand].beats].beats].score;
-                    score += mWinscore;
+                    const mWscore = myWinscore[my];
+                    score += mWscore == 3 ? game[eHand].score : mWscore == 0 ? game[game[eHand].beats].score : game[game[game[eHand].beats].beats].score;
+                    score += mWscore;
                 }
             }
             return score;            
