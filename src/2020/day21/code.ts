@@ -5,21 +5,14 @@
  * All rights reserved.
  */
 
+import { Part, Utils } from "../../generic";
+
 namespace day21 {
-    const generic = require('../../generic');
     
     /** ADD 2020-day21 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
-    function getIntersection(setA, setB) {
-        var aa = [...setA.keys()];
-        var bb = aa.filter(element => setB.has(element))
-        const intersection = new Set(
-            bb
-        );      
-        return intersection;
-      }    
 
-    generic.Utils.main((input) => {
+    Utils.main((input) => {
 
         /** ADD START HERE */
         const allergens = [];
@@ -42,7 +35,7 @@ namespace day21 {
         for (var allergen in ingrSetsByAll) {
             let myset = ingrSetsByAll[allergen][0];
             for (var i=1; i<ingrSetsByAll[allergen].length; i++)
-                myset = getIntersection(myset, ingrSetsByAll[allergen][i]);
+                myset = Utils.getIntersection(myset, ingrSetsByAll[allergen][i]);
             possibleIngrsPerAll[allergen] = myset;
         }
 

@@ -9,15 +9,6 @@ import { Part, Utils } from "../../generic";
 
 namespace day03 {
 
-    function getIntersection(setA, setB) {
-        var aa = [...setA.keys()];
-        var bb = aa.filter(element => setB.has(element))
-        const intersection = new Set(
-            bb
-        );      
-        return intersection;
-    }    
-
     const charCode = (c) => {
         if (/[A-Z]/.test(c)) {
             return 26 + c.charCodeAt(0) - "A".charCodeAt(0) + 1;
@@ -48,15 +39,11 @@ namespace day03 {
                     var items = line.split('');
                     const comp1 = new Set(items.slice(0, items.length/2));
                     const comp2 = new Set(items.slice(items.length/2));
-                    const comItem = [...getIntersection(comp1, comp2)][0];
-    
+                    const comItem = [...Utils.getIntersection(comp1, comp2)][0];
                     sum += charCode(comItem);
-    
-    
                 }
     
-                let answerPart1 = sum;
-    
+                let answerPart1 = sum;    
 
                 return answerPart1;
 
@@ -66,19 +53,14 @@ namespace day03 {
                     const comp1 = new Set(input[i].split(''));
                     const comp2 = new Set(input[i+1].split(''));
                     const comp3 = new Set(input[i+2].split(''));
-
-                    const comItem = [...getIntersection(getIntersection(comp1, comp2), comp3)][0]
-    
+                    const comItem = [...Utils.getIntersection(Utils.getIntersection(comp1, comp2), comp3)][0]
                     sum += charCode(comItem);
-    
-    
                 }
     
-                let answerPart2 = sum;
-    
+                let answerPart2 = sum;    
 
                 return answerPart2;
-
+                
             }
 
         }, "2022", "day03", 

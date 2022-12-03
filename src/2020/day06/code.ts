@@ -5,29 +5,22 @@
  * All rights reserved.
  */
 
-namespace day06 {
-    const generic = require('../../generic');
+import { Part, Utils } from "../../generic";
 
-    function getIntersection(setA, setB) {
-        var aa = [...setA.keys()];
-        var bb = aa.filter(element => setB.has(element))
-        const intersection = new Set(
-            bb
-        );      
-        return intersection;
-      }    
+namespace day06 {
+ 
     
     /** ADD 2020-day06 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
-    generic.Utils.main((input) => {
+    Utils.main((input) => {
 
-        var parts = generic.Utils.splitInput(input);
+        var parts = Utils.splitInput(input);
 
         let count = 0;
         for (var group of parts) {
             let set = new Set(group[0].split(''));
             for (var yesQuestions of group) {
-                set = getIntersection(set, new Set(yesQuestions.split('')));
+                set = Utils.getIntersection(set, new Set(yesQuestions.split('')));
             }
             count += set.size;
         }

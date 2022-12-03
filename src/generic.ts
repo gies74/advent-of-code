@@ -66,10 +66,10 @@ export class Utils {
      * @param top 
      * @returns 
      */
-    public static multiDimOffsets = (n: number, top=true) => {
+    public static multiDimOffsets = (n: number, top: boolean = true) => {
         if (n==0)
             return [[]];
-        let r = [];
+        let r: any[] = [];
         for (var i of [-1,0,1])
             for (var e of Utils.multiDimOffsets(n-1, false)) {
                 const cp = e.slice(0);
@@ -77,8 +77,9 @@ export class Utils {
                 r.push(cp);
             }
         
+        // filter out the all 0 co-ordinate
         if (top)
-            r = r.filter(v => v.some(e => e !== 0));
+            r = r.filter(v => v.some((e: any): boolean => e !== 0));
         return r;
     }
 
@@ -86,10 +87,26 @@ export class Utils {
      * Counts the elements of an any dimensional array that are truthy
      * @param array 
      */
-    public static sumTruthy = (array: any[]):number => {
+    public static countTruthy = (array: any[]): number => {
         return array.reduce((aggregate, element) => {
-            const s= aggregate + (element.length ? Utils.sumTruthy(element) : element ? 1 : 0);
+            const s= aggregate + (element.length ? Utils.countTruthy(element) : element ? 1 : 0);
             return s;
         }, 0);
     }
+
+    public static sum = (array: any[]): number => {
+        return array.reduce((aggregate, element) => {
+            const s= aggregate + (element.length ? Utils.sum(element) : Number(element));
+            return s;
+        }, 0);
+    }
+
+    public static getIntersection = (setA: Set<any>, setB: Set<any>): Set<any> => {
+        var aa = [...setA.keys()];
+        var bb = aa.filter(element => setB.has(element))
+        const intersection = new Set(
+            bb
+        );      
+        return intersection;
+    }        
 }
