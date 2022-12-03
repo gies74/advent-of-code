@@ -94,13 +94,20 @@ export class Utils {
         }, 0);
     }
 
-    public static sum = (array: any[]): number => {
+    /***
+     * Sums the elements of an any dimensional array assuming they are numeric
+     * @param array 
+     */
+     public static sum = (array: any[]): number => {
         return array.reduce((aggregate, element) => {
             const s= aggregate + (element.length ? Utils.sum(element) : Number(element));
             return s;
         }, 0);
     }
 
+    /***
+     * Creates the intersection of two sets
+     */
     public static getIntersection = (setA: Set<any>, setB: Set<any>): Set<any> => {
         var aa = [...setA.keys()];
         var bb = aa.filter(element => setB.has(element))
