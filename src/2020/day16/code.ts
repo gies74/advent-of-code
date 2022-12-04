@@ -112,7 +112,7 @@ namespace day16 {
 
                             if (evaluation && !otherFieldsPassingAllValues.length) {
                                 fieldIndices[fieldname] = index;
-                                breakOuter = true;
+                                breakOuter = true; 
                                 break;
                             }
                         }

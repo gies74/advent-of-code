@@ -68,7 +68,7 @@ namespace day17 {
                     }
                 }
                 state = newState;
-                console.log(`After cycle ${cycle + 1}: total = ${Utils.sumTruthy(state)}`);
+                console.log(`After cycle ${cycle + 1}: total = ${Utils.countTruthy(state)}`);
             }
 
 
