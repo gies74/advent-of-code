@@ -25,7 +25,7 @@ namespace day07 {
         getSize() {
             return 0;
         }
-        
+
         findSpace(oTotal) {
             return;
         }        
@@ -106,10 +106,8 @@ namespace day07 {
                                 const subdir = current.contents.find(fs => fs instanceof FsDir && fs.name === parts[2]);
                                 current = subdir as FsDir;
                             }
+                            break;
                     }
-
-                } else if (input.length == 0) {
-                    break;
                 }
             }
             
