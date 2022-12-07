@@ -19,3 +19,7 @@ Instructions (daily):
 - npm start [DAYNUM]
 - go to src/{YEAR}/day{DAYNUM}/code.ts, place a breakpoint and launch the run configuration named "Run"
 - have fun!
+
+Tips and known deficits:
+- Install the VSCode extension https://marketplace.visualstudio.com/items?itemName=george-alisson.html-preview-vscode to view the HTML formatted puzzle description in ./data/YEAR/dayDAYNUM/puzzle.html within VSCode. Download AoC's style.css once only into a folder /data/static for optimal rendering. 
+- Currently there's no support to submit your answer from the VSCode environment. For now you should do this using your browser. 
