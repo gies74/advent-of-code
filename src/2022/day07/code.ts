@@ -12,7 +12,7 @@ namespace day07 {
     
     class FsObj {
         name: string;
-        parent: FsObj;
+        parent: FsDir;
 
         constructor(name, parent) {
             this.name = name;
@@ -25,6 +25,7 @@ namespace day07 {
         getSize() {
             return 0;
         }
+        
         findSpace(oTotal) {
             return;
         }        
@@ -47,9 +48,11 @@ namespace day07 {
         constructor(name, parent) {
             super(name, parent);
         }
+
         getSize() {
             return this.contents.reduce((agg, fo:FsObj) => agg + fo.getSize(), 0)
         }
+
         findSpace(oTotal) {
             this.contents.forEach(fs => fs.findSpace(oTotal));
             const mySize = this.getSize();
@@ -70,7 +73,7 @@ namespace day07 {
         (input: string[], part: Part) => {
 
             var root = new FsDir("/", null);
-            let current = null;
+            let current: FsDir = null;
 
             while (input.length) {
                 var line = input.shift();
@@ -98,7 +101,7 @@ namespace day07 {
                             if (parts[2] === "/") {
                                 current = root;
                             } else if (parts[2] === "..") {
-                                current = current.parent as FsDir;
+                                current = current.parent;
                             } else {
                                 const subdir = current.contents.find(fs => fs instanceof FsDir && fs.name === parts[2]);
                                 current = subdir as FsDir;
@@ -120,19 +123,10 @@ namespace day07 {
             let answerPart2 = oTotal.lowestAboveTarget;
 
             if (part == Part.One) {
-
-                // part 1 specific code here
-
                 return answerPart1;
-
             } else {
-
-                // part 2 specific code here
-
                 return answerPart2;
-
             }
-
         }, "2022", "day07", 
         // set this switch to Part.Two once you've finished part one.
         Part.One, 
