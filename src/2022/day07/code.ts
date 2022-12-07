@@ -25,7 +25,7 @@ namespace day07 {
         getSize() {
             return 0;
         }
-        getSize100k(oTotal) {
+        findSpace(oTotal) {
             return;
         }        
     }
@@ -39,10 +39,7 @@ namespace day07 {
 
         getSize() {
             return this.size;
-        }
-        getSize100k(oTotal) {
-            return;
-        }        
+        }     
     }
 
     class FsDir extends FsObj {
@@ -53,11 +50,11 @@ namespace day07 {
         getSize() {
             return this.contents.reduce((agg, fo:FsObj) => agg + fo.getSize(), 0)
         }
-        getSize100k(oTotal) {
-            this.contents.forEach(fs => fs.getSize100k(oTotal));
+        findSpace(oTotal) {
+            this.contents.forEach(fs => fs.findSpace(oTotal));
             const mySize = this.getSize();
             if (mySize <= 100000)
-                oTotal.total += mySize;
+                oTotal.totalUnder100k += mySize;
             if (mySize > oTotal.target && mySize < oTotal.lowestAboveTarget)
                 oTotal.lowestAboveTarget = mySize;
         }
@@ -75,31 +72,26 @@ namespace day07 {
             var root = new FsDir("/", null);
             let current = null;
 
-            while (true) {
+            while (input.length) {
                 var line = input.shift();
-                if (!line)
-                    break;
                 var parts = line.split(' ');
                 if (parts[0] == "$") {
                     switch(parts[1]) {
                         case "ls":
-                            while (!/^\$ /.test(input[0])) {
+                            while (input.length && !/^\$ /.test(input[0])) {
                                 var fsLine = input.shift();
-                                if (!fsLine) {
-                                    break;
-                                }
                                 const [attr, name] = fsLine.split(' ');
 
                                 const existsCheck = current.contents.find(fs => fs.name === name);
                                 if (existsCheck) {
-                                    console.log("known");
+                                    console.log(`ls object ${name} known`);
                                     continue;
                                 }
                                 if (attr === "dir") {
                                     new FsDir(name, current);
                                     continue;
                                 }
-                                const fsFile = new FsFile(name, current, parseInt(attr));
+                                new FsFile(name, current, parseInt(attr));
                             }
                             break;
                         case "cd":
@@ -118,14 +110,14 @@ namespace day07 {
                 }
             }
             
-            const used = 70000000 - root.getSize();
+            const free = 70000000 - root.getSize();
             const needed = 30000000;
-            const target = needed - used;
+            const target = needed - free;
 
-            var total = { "total": 0, "target": target, "lowestAboveTarget": 99999999999999};
-            root.getSize100k(total);
-            let answerPart1 = total.total;
-            let answerPart2 = total.lowestAboveTarget;
+            var oTotal = { "totalUnder100k": 0, "target": target, "lowestAboveTarget": 99999999999999};
+            root.findSpace(oTotal);
+            let answerPart1 = oTotal.totalUnder100k;
+            let answerPart2 = oTotal.lowestAboveTarget;
 
             if (part == Part.One) {
 
@@ -143,7 +135,7 @@ namespace day07 {
 
         }, "2022", "day07", 
         // set this switch to Part.Two once you've finished part one.
-        Part.Two, 
+        Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
