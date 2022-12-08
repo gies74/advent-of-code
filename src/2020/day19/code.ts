@@ -82,38 +82,27 @@ namespace day19 {
 
             let matchCounts = 0;
 
+            const reTxt = `^((${resolved["42"].join('|')}){2,})((${resolved["31"].join('|')}){1,})$`;
+            const re = new RegExp(reTxt);
+
             for (var ch of chunks[1]) {
                 
                 if (resolved["0"].includes(ch))
                     matchCounts++;
-                else 
-                if (resolved["42"].some(p => new RegExp(`^${p}`).test(ch)) && resolved["31"].some(p => new RegExp(`${p}$`).test(ch)))
-                    matchCounts++;
+                
+                else if (part == Part.Two && re.test(ch)) {
+                    var ms = ch.match(re);
+                    if ((ms[1].length / ms[2].length) > (ms[3].length / ms[4].length))
+                        matchCounts++;
+                }
             }
 
+            return matchCounts;
 
-
-
-            let answerPart1 = matchCounts;
-            let answerPart2 = 0;
-
-            if (part == Part.One) {
-
-                // part 1 specific code here
-
-                return answerPart1;
-
-            } else {
-
-                // part 2 specific code here
-
-                return answerPart2;
-
-            }
 
         }, "2020", "day19", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        0);
 }
