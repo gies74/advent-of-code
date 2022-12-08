@@ -30,11 +30,11 @@ namespace day08 {
                 for(var y=0; y<forest.length;y++) {
                     for (var x=0; x<forest[y].length;x++) {
                         const height = forest[y][x];
-                        const tLeft = forest[y].slice(0,x);
-                        const tRight = forest[y].slice(x+1);
-                        const tTop = forest.slice(0,y).map(line => line[x]);
-                        const tBottom = forest.slice(y+1).map(line => line[x]);
-                        if (tLeft.every(t => t < height) || tRight.every(t => t < height) || tTop.every(t => t < height) || tBottom.every(t => t < height)) {
+                        const tLeft = forest[y].slice(0,x).every(t => t < height);
+                        const tRight = forest[y].slice(x+1).every(t => t < height);
+                        const tTop = forest.slice(0,y).map(line => line[x]).every(t => t < height);
+                        const tBottom = forest.slice(y+1).map(line => line[x]).every(t => t < height);
+                        if (tLeft || tRight || tTop || tBottom) {
                             visible++;
                         }
                     }
@@ -50,14 +50,11 @@ namespace day08 {
 
                 let bestScenic = -1;
 
-                let visible = 0;
                 for(var y=0; y<forest.length;y++) {
                     for (var x=0; x<forest[y].length;x++) {
                         const height = forest[y][x];
-
                         let scenic = 1;
                         for (var delta of deltas) {
-
                             let dX = x + delta[0];
                             let dY = y + delta[1];
                             let dist = 0;
@@ -69,19 +66,13 @@ namespace day08 {
                                 dY += delta[1];
                             }
                             scenic *= dist;
-
                         }
                         if (scenic > bestScenic) {
                             bestScenic = scenic;
                         }
-
-
-
                     }
                 }
-
                 return bestScenic;
-
             }
 
         }, "2022", "day08", 
