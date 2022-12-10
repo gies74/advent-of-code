@@ -52,23 +52,24 @@ namespace day20 {
 
         _neighbour(tiles, edgeIndex) {
             const myEdgeNum = this.edgeNums[edgeIndex];
-            const myRightNeighbour = this.neighbours(tiles)[edgeIndex];
-            let idx = myRightNeighbour.edgeNums.indexOf(myEdgeNum);
+            const myNeighbour = this.neighbours(tiles)[edgeIndex];
+            return myNeighbour._fit_towards(edgeIndex, myEdgeNum);
+        }
+
+        _fit_towards(edgeIndex, myEdgeNum) {
+            let idx = this.edgeNums.indexOf(myEdgeNum);
             if (idx === -1)
                 throw Error("Fck");
             if (idx < 4)
-                myRightNeighbour.flip();
-            idx = myRightNeighbour.edgeNums.indexOf(myEdgeNum);
+                this.flip();
+            idx = this.edgeNums.indexOf(myEdgeNum);
             if (idx < 4)
                 throw Error("fck more");
             var rotations = (idx + 2 - edgeIndex) % 4;
             for (var r=0; r<rotations; r++)
-                myRightNeighbour.rotate();
-            return myRightNeighbour;
+                this.rotate();
+            return this;
         }
-
-
-
 
         flip() {
             this.data = this.data.reverse();
@@ -84,6 +85,22 @@ namespace day20 {
         }
 
     }
+
+    const getImage = (puzzle: Tile[][]): string[] => {
+        const dLength = puzzle[0][0].data.length - 2;
+        const result: string[] = Array(puzzle.length * dLength).fill("");
+        puzzle.forEach((pRow, pIdx) =>
+            pRow.forEach(tile => {
+                tile.data.slice(1, tile.data.length - 1).forEach((dRow, dIdx) =>
+                    result[pIdx * dLength + dIdx] += dRow.substring(1, dRow.length - 1))
+            })
+        );
+
+        return result;
+    }
+
+
+
 
     const puzzle = Utils.multiDimArray(2, 12, () => null);
 
@@ -104,31 +121,83 @@ namespace day20 {
             const tiles = chunks.map(ch => new Tile(ch));
 
             const cornerTiles = tiles.filter(tile => tile.neighbours(tiles).filter(n => n).length === 2);
-            for (var x=0; x<3; x++)
-                cornerTiles[0].rotate();
-            puzzle[0][0] = cornerTiles[0];
             if (cornerTiles.length != 4)
                 console.warn("FFFFFOOUOOOOUUUUUUTTTTT");
-
-            for (var y=0; y < puzzle.length;y++) {
-                for (var x=1; x < puzzle[0].length; x++) {
-                    puzzle[y][x] = puzzle[y][x-1].rightNeighbour(tiles);
-                }
-                if (y < puzzle.length - 1) {
-                    puzzle[y+1][0] = puzzle[y][0].underNeighbour(tiles);
-                }
-            } 
 
             if (part == Part.One) {
                 let answerPart1 = cornerTiles.reduce((agg, elt) => elt.id * agg, 1);
                 return answerPart1;
             } else {
-                return 0;
+                const smCoords = [];
+                const seamonsterImage= [
+                    "                  # ",
+                    "#    ##    ##    ###",
+                    " #  #  #  #  #  #   "      
+                ];
+                seamonsterImage.map((l, li) => l.split('').forEach((c, ci) => {
+                    if (c==="#")
+                        smCoords.push([li,ci]);
+                }));
+                
+                const topEdgeNums = []
+                for (var ct of cornerTiles) {
+                    const neighbours = ct.neighbours(tiles);
+                    for (var i=0; i<4; i++) {
+                        if (!neighbours[i] && !neighbours[(i + 3) % 4]) {
+                            topEdgeNums.push(ct.edgeNums[i + 4]);
+                            topEdgeNums.push(ct.edgeNums[(i + 3) % 4]);
+                        }
+                    }
+                }
+
+                let answerPart2 = Infinity;
+    
+                for (var topEdgeNum of topEdgeNums) {
+    
+                    const cornerTile = tiles.find(t => t.edgeNums.includes(topEdgeNum));
+                    if (!cornerTile) {
+                        var brjj = 1;
+                    }
+                    cornerTile._fit_towards(2, topEdgeNum);
+    
+                    puzzle[0][0] = cornerTile;
+    
+                    for (var y=0; y < puzzle.length;y++) {
+                        for (var x=1; x < puzzle[0].length; x++) {
+                            puzzle[y][x] = puzzle[y][x-1].rightNeighbour(tiles);
+                        }
+                        if (y < puzzle.length - 1) {
+                            puzzle[y+1][0] = puzzle[y][0].underNeighbour(tiles);
+                        }
+                    }
+    
+                    var image = getImage(puzzle);
+
+                    var smCount = 0;
+                    for (var y=0;y<image.length - seamonsterImage.length; y++) {
+                        for (var x=0; x<image[y].length - seamonsterImage[0].length; x++) {
+                            if (smCoords.every(c => image[y + c[0]][x + c[1]] === "#")) {
+                                smCount += 1;
+                                smCoords.forEach(c => { 
+                                    image[y + c[0]] = image[y + c[0]].substring(0, x + c[1]) + "■" + image[y + c[0]].substring(x + c[1] + 1);
+                                });
+                            }
+                        }
+                    }
+
+                    var hashCnt = image.reduce((agg, line) => line.replace(/[.■]/g, "").length + agg, 0);
+
+                    if (hashCnt < answerPart2) 
+                        answerPart2 = hashCnt;
+    
+                }
+    
+                return answerPart2;
             }
 
         }, "2020", "day20", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
