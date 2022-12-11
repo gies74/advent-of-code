@@ -42,14 +42,11 @@ namespace day11 {
         const items = chunk[1].split(': ')[1].split(', ').map(n => parseInt(n));
         const fnTxt = `return ${chunk[2].split(" = ")[1]};`;
         const op = new Function("old", fnTxt);
-        // const funcTxt = `function (old) { return ${chunk[2].split(" = ")[1]}; }`;
-        // const op = parseFunction(funcTxt);        
         const devisor = parseInt(chunk[3].split(" by ")[1]);
         const ifTrue = parseInt(chunk[4].split('monkey ')[1]);
         const ifFalse = parseInt(chunk[5].split('monkey ')[1]);
         return new Monkey(items, op, devisor, ifTrue, ifFalse);
     }
-
 
     Utils.main(
         /**
@@ -62,16 +59,14 @@ namespace day11 {
 
             const chunks = Utils.splitInput(input);
             const monkeys = chunks.map(ch => parseMonkey(ch));
-
-            //monkeys = monkeysExample;
             const commonDivisor = monkeys.reduce((agg, m) => agg * m.testDivisor, 1);
+            
             const nRounds = part === Part.One ? 20 : 10000;
             for (var i = 0; i < nRounds; i++) {
                 monkeys.forEach(monkey => monkey.process(monkeys, part, commonDivisor));
             }
 
             const sMonkeys = monkeys.sort((m1, m2) => m2.numInspections - m1.numInspections);
-
             return sMonkeys[0].numInspections * sMonkeys[1].numInspections;
 
         }, "2022", "day11",
