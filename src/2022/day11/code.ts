@@ -41,11 +41,11 @@ namespace day11 {
     const parseMonkey = (chunk: string[]): Monkey => {
         const items = chunk[1].split(': ')[1].split(', ').map(n => parseInt(n));
         const fnTxt = `return ${chunk[2].split(" = ")[1]};`;
-        const op = new Function("old", fnTxt);
-        const devisor = parseInt(chunk[3].split(" by ")[1]);
+        const operator = new Function("old", fnTxt);
+        const testDivisor = parseInt(chunk[3].split(" by ")[1]);
         const ifTrue = parseInt(chunk[4].split('monkey ')[1]);
         const ifFalse = parseInt(chunk[5].split('monkey ')[1]);
-        return new Monkey(items, op, devisor, ifTrue, ifFalse);
+        return new Monkey(items, operator, testDivisor, ifTrue, ifFalse);
     }
 
     Utils.main(
@@ -66,8 +66,8 @@ namespace day11 {
                 monkeys.forEach(monkey => monkey.process(monkeys, part, commonDivisor));
             }
 
-            const sMonkeys = monkeys.sort((m1, m2) => m2.numInspections - m1.numInspections);
-            return sMonkeys[0].numInspections * sMonkeys[1].numInspections;
+            monkeys.sort((m1, m2) => m2.numInspections - m1.numInspections);
+            return monkeys[0].numInspections * monkeys[1].numInspections;
 
         }, "2022", "day11",
         // set this switch to Part.Two once you've finished part one.
