@@ -5,6 +5,7 @@
  * All rights reserved.
  */ 
 
+import { stringify } from "querystring";
 import { Part, Utils } from "../../generic";
 
 namespace day14 {
@@ -33,8 +34,10 @@ namespace day14 {
     };
 
     const printCave = (cave) => {
-        console.log("\n" + cave.map(l => l.join("")).join("\n"));
-    }
+        cave.forEach((l, i) => {
+            console.log(`${("00" + String(i)).slice(-3)} ${l.join("")}`);
+        });
+    };
 
     Utils.main(
         /**
@@ -61,8 +64,6 @@ namespace day14 {
             const devX = 1 + Math.max(srcX - minX, maxX - srcX, maxY + 1);
 
             const cave = modelCave(input, devX, maxY);
-
-            printCave(cave);
 
             let cntSandRest = 0;
             let caveFull = false;
