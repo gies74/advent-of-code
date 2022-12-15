@@ -66,8 +66,9 @@ namespace day15 {
                 const uppLimit = 4000000;
                 const tgt=[0,0];
 
+                var found = false;
                 for (var sbpair of sensBeacPairs) {
-                    for (var x=Math.max(lowLimit, sbpair[0] - sbpair[4] - 1); x<=Math.min(uppLimit, sbpair[0] + sbpair[4] + 1); x++) {
+                    for (var x=Math.max(lowLimit, sbpair[0] - sbpair[4] - 1); !found && x<=Math.min(uppLimit, sbpair[0] + sbpair[4] + 1); x++) {
                         const yu = sbpair[1] + (sbpair[4] - Math.abs(sbpair[0] - x)) + 1; 
                         const yl = sbpair[1] - (sbpair[4] - Math.abs(sbpair[0] - x)) - 1;
 
@@ -79,10 +80,11 @@ namespace day15 {
                             coords.push([x,yl]);
                         }
 
-                        coords.forEach(coord => {
-                            if (sensBeacPairs.filter(sbp => sbp != sbpair).every(sbp => Math.abs(sbp[0] - coord[0]) + Math.abs(sbp[1] - coord[1]) > sbp[4])) {
+                        coords.forEach(coord => {                            
+                            if (sensBeacPairs.filter(sbp => !found && sbp != sbpair).every(sbp => Math.abs(sbp[0] - coord[0]) + Math.abs(sbp[1] - coord[1]) > sbp[4])) {                                
                                 tgt[0] = coord[0];
                                 tgt[1] = coord[1];
+                                found = true;
                             }
                         });
                     }
@@ -96,7 +98,7 @@ namespace day15 {
 
         }, "2022", "day15", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
