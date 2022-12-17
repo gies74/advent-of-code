@@ -69,6 +69,7 @@ namespace day15 {
                 var found = false;
                 for (var sbpair of sensBeacPairs) {
                     for (var x=Math.max(lowLimit, sbpair[0] - sbpair[4] - 1); !found && x<=Math.min(uppLimit, sbpair[0] + sbpair[4] + 1); x++) {
+
                         const yu = sbpair[1] + (sbpair[4] - Math.abs(sbpair[0] - x)) + 1; 
                         const yl = sbpair[1] - (sbpair[4] - Math.abs(sbpair[0] - x)) - 1;
 
@@ -81,7 +82,8 @@ namespace day15 {
                         }
 
                         coords.forEach(coord => {                            
-                            if (sensBeacPairs.filter(sbp => !found && sbp != sbpair).every(sbp => Math.abs(sbp[0] - coord[0]) + Math.abs(sbp[1] - coord[1]) > sbp[4])) {                                
+                            if (!found && sensBeacPairs.filter(sbp => sbp != sbpair).every(sbp => Math.abs(sbp[0] - coord[0]) + Math.abs(sbp[1] - coord[1]) > sbp[4])) {    
+                                console.log(coord) ;                           
                                 tgt[0] = coord[0];
                                 tgt[1] = coord[1];
                                 found = true;
@@ -91,6 +93,7 @@ namespace day15 {
                 }
 
                 answerPart2 = tgt[0] * 4000000 + tgt[1]; 
+
 
                 return answerPart2;
 
