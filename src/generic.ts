@@ -63,25 +63,42 @@ export class Utils {
     /**
      * Generate array of length n arrays to use as neighbouring offset deltas in an n-dimensional space 
      * @param n 
+     * @param ortho just the offsets in single dimension
      * @param top 
      * @returns 
      */
-    public static multiDimOffsets = (n: number, top: boolean = true) => {
+    public static multiDimOffsets = (n: number, ortho: boolean) => {
         if (n==0)
             return [[]];
         let r: any[] = [];
         for (var i of [-1,0,1])
-            for (var e of Utils.multiDimOffsets(n-1, false)) {
+            for (var e of Utils._multiDimOffsets(n-1, ortho)) {
                 const cp = e.slice(0);
                 cp.push(i);
                 r.push(cp);
             }
         
         // filter out the all 0 co-ordinate
-        if (top)
-            r = r.filter(v => v.some((e: any): boolean => e !== 0));
+        r = r.filter(v => v.some((e: any): boolean => e !== 0));
+        // filter out co-ordinates that are not orthogonal
+        if (ortho)
+            r = r.filter(v => Utils.countTruthy(v.map(c => Math.abs(c))) === 1);
         return r;
     }
+
+    public static _multiDimOffsets = (n: number, ortho: boolean) => {
+        if (n==0)
+            return [[]];
+        let r: any[] = [];
+        for (var i of [-1,0,1])
+            for (var e of Utils._multiDimOffsets(n-1, ortho)) {
+                const cp = e.slice(0);
+                cp.push(i);
+                r.push(cp);
+            }        
+        return r;
+    }
+
 
     /***
      * Counts the elements of an any dimensional array that are truthy
