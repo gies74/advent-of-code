@@ -12,14 +12,15 @@ import { Part, Utils } from "../../generic";
 namespace day16 {
 
     const valves = {};
+    const MINUTES = 30;
 
 
     const evaluate = (valveOpenActions) => {
-        if (valveOpenActions.length > 30) {
+        if (valveOpenActions.length > MINUTES) {
             return -1;
         }
         return valveOpenActions.reduce((agg, elt, idx) => {
-            return agg + (elt && !/>/.test(elt) ? valves[elt].rate * (29 - idx) : 0);
+            return agg + (elt && !/>/.test(elt) ? valves[elt].rate * (MINUTES - 1 - idx) : 0);
         }, 0);
     }
 
@@ -61,11 +62,12 @@ namespace day16 {
             }
         }
         const targets = Object.values(gainPerValve).filter(v => v.valve != pos);
-        const gains = targets.map(v => v.getGain(29 - opened.length - v.getPath().length));
+        const gains = targets.map(v => v.getGain(MINUTES - 1 - opened.length - v.getPath().length));
+        // only consider top 12 gains
         const topGains = gains.slice(0).sort((i,j) => j - i).slice(0,12);
 
         const topReleases = topGains.map(topGain => {
-            const idxMaxGain = gains.findIndex((g, i) => g === topGain && targets[i].getPath().length < 29 - opened.length);
+            const idxMaxGain = gains.findIndex((g, i) => g === topGain && targets[i].getPath().length < MINUTES - 1 - opened.length);
             if (idxMaxGain === -1 || gains[idxMaxGain] === 0) {
                 return evaluate(opened);
             }
