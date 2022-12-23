@@ -44,7 +44,7 @@ namespace day23 {
             input.forEach((l, li) => {
                 l.split('').forEach((c, ci) => {
                     if (c === "#") {
-                        elves.push(new Elve(ci + ROUNDS/4, li + ROUNDS/4));
+                        elves.push(new Elve(ci + ROUNDS / 4, li + ROUNDS / 4));
                     }
                 });
             });
@@ -98,29 +98,25 @@ namespace day23 {
                 }
 
                 if (part === Part.One && round === 9) {
-                    processContinues = false;                    
+                    processContinues = false;
                 }
 
             }
 
-            const extremes = [
-                Math.min(...elves.map(e => e.x)),
-                Math.max(...elves.map(e => e.x)),
-                Math.min(...elves.map(e => e.y)),
-                Math.max(...elves.map(e => e.y)),
-            ];
-
-            let answerPart1 = (extremes[1] - extremes[0] + 1) * (extremes[3] - extremes[2] + 1) - elves.length;
-
             if (part == Part.One) {
 
-                // part 1 specific code here
+                const extremes = [
+                    Math.min(...elves.map(e => e.x)),
+                    Math.max(...elves.map(e => e.x)),
+                    Math.min(...elves.map(e => e.y)),
+                    Math.max(...elves.map(e => e.y)),
+                ];
+
+                let answerPart1 = (extremes[1] - extremes[0] + 1) * (extremes[3] - extremes[2] + 1) - elves.length;
 
                 return answerPart1;
 
             } else {
-
-                // part 2 specific code here
 
                 return answerPart2;
 
