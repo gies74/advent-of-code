@@ -32,7 +32,7 @@ namespace day17 {
                 });
             });
 
-            const deltas = Utils.multiDimOffsets(4);
+            const deltas = Utils.multiDimOffsets(4, false);
 
             const printPlane =(z) => {
                 console.log(`z=${z-nCycles}`);
