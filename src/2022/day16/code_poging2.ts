@@ -91,7 +91,7 @@ namespace day16 {
          */
         (input: string[], part: Part) => {
 
-
+            
 
             for (var line of input) {
                 const pattern = /^Valve ([A-Z]{2}) has flow rate=(\d+); tunnels? leads? to valves? (.+)$/;
@@ -100,6 +100,19 @@ namespace day16 {
                 const tunnels = line.replace(pattern, "$3").split(", ");
                 valves[valve] = { rate, tunnels };
             }
+
+            // FUN sidetrack -> create input for https://csacademy.com/app/graph_editor/
+            let msg = "";
+            for (var fromValve of Object.keys(valves)) {
+                for (var toValve of valves[fromValve].tunnels) {
+                    try {
+                    msg += `${fromValve}-${valves[fromValve].rate} ${toValve}-${valves[toValve].rate}\n`
+                    } catch {
+                        var breakhe = 1;
+                    }
+                }
+            }
+            console.log(msg);
 
             const pressureReleased = breadthFirst("AA", []);
 

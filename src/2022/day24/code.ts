@@ -5,6 +5,7 @@
  * All rights reserved.
  */
 
+import { table } from "console";
 import { text } from "stream/consumers";
 import { Part, Utils } from "../../generic";
 
@@ -41,21 +42,22 @@ namespace day24 {
         constructor(limY:number, limX:number) {
             this.limY = limY;
             this.limX = limX;
-            this.timeCells = [new TimeCell(0, -1, null)];
+            this.timeCells = [];
         }
 
-        isSolved() {
-            return this.timeCells.some(tc => tc.y === this.limY-1 &&  tc.x === this.limX-1);
+        isSolved(toX, toY) {
+            return this.timeCells.some(tc => tc.y === toY &&  tc.x === toX);
         }
 
-        search(blizzards: Blizzard[]) {
+        search(blizzards: Blizzard[], initTC:TimeCell, x, y) {
             let time = 0;
-            while (!this.isSolved()) {
+            this.timeCells = [initTC];
+            while (!this.isSolved(x, y)) {
                 blizzards.forEach(b => b.move());
                 time++;
 
                 // add all cells in waiting state
-                const timeCells = this.timeCells.map(tc => new TimeCell(tc.x, tc.y, tc));
+                const timeCells = this.timeCells.filter(tc => !blizzards.some(b => b.x === tc.x && b.y === tc.y)).map(tc => new TimeCell(tc.x, tc.y, tc));
 
                 const searchSpace = this;
                 this.timeCells.forEach(tc => {
@@ -74,8 +76,8 @@ namespace day24 {
                 this.timeCells = timeCells;
             }
 
-            let solutionTC = this.timeCells.find(tc => tc.y === this.limY-1 &&  tc.x === this.limX-1);
-            return solutionTC.getSteps();
+            let solutionTC = this.timeCells.find(tc => tc.y === y &&  tc.x === x);
+            return solutionTC;
 
         }
 
@@ -122,27 +124,28 @@ namespace day24 {
             });
 
             const searchSpace = new SearchSpace(input.length -2, input[0].length - 2);
-            
-            let answerPart1 = searchSpace.search(blizzards);
-            let answerPart2 = 0;
+            let targetTC = searchSpace.search(blizzards, new TimeCell(0, -1, null), searchSpace.limX-1, searchSpace.limY-1);
 
             if (part == Part.One) {
 
-                // part 1 specific code here
-
-                return answerPart1;
+                return targetTC.getSteps();
 
             } else {
-
-                // part 2 specific code here
-
-                return answerPart2;
+                
+                // blizzards move on for one more minute while the expedition is at the exit
+                blizzards.forEach(b => b.move());
+                targetTC  = searchSpace.search(blizzards, new TimeCell(searchSpace.limX - 1, searchSpace.limY, targetTC), 0, 0);
+                // blizzards move on for one more minute while the expedition is at the entry
+                blizzards.forEach(b => b.move());
+                targetTC  = searchSpace.search(blizzards, new TimeCell(0, -1, targetTC), searchSpace.limX-1, searchSpace.limY-1);
+                
+                return targetTC.getSteps();
 
             }
 
         }, "2022", "day24", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        0);
 }
