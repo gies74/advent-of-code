@@ -26,21 +26,31 @@ namespace day01 {
             // var chunks = Utils.splitInput(input);
             let answerPart1 = 0;
             let answerPart2 = 0;
+            var inputI = input.map(str => parseInt(str));
+
+
+            const calcF1 = m => Math.floor(m / 3) - 2;
 
             if (part == Part.One) {
-                answerPart1 = input.map(str => Math.floor(parseInt(str) / 3) - 2).reduce((cum, elt) => cum + elt, 0);
 
                 // part 1 specific code here
-
-                return answerPart1;
+                return inputI.map(calcF1).reduce((cum, elt) => cum + elt, 0);
 
             } else {
+                const calcF2 = m => {
+                    let totModuleFuel = 0;
+                    let addtnlFuel = calcF1(m);
+                    while (addtnlFuel >= 0) {
+                        totModuleFuel += addtnlFuel;
+                        addtnlFuel = calcF1(addtnlFuel);
+                    }
+                    return totModuleFuel;
+                };
 
-                // part 2 specific code here
-
-                return answerPart2;
+                return inputI.map(calcF2).reduce((cum, elt) => cum + elt, 0);
 
             }
+
 
         }, "2019", "day01", 
         // set this switch to Part.Two once you've finished part one.
