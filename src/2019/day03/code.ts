@@ -40,23 +40,21 @@ namespace day03 {
     };
 
     const crossesAt = (p0, p1, q0, q1) => {
-        var pHqV = p0[0] == p1[0] && q0[1] == q1[1];
-        var pVqH = p0[1] == p1[1] && q0[0] == q1[0];
-        var xPt;
-        if (pHqV 
+        var pVqH = p0[0] == p1[0] && q0[1] == q1[1];
+        var pHqV = p0[1] == p1[1] && q0[0] == q1[0];
+        var xPt = null;
+        if (pVqH 
             && Math.min(p0[1], p1[1]) < q0[1] && q0[1] < Math.max(p0[1], p1[1]) 
             && Math.min(q0[0], q1[0]) < p0[0] && p0[0] < Math.max(q0[0], q1[0])) 
         {
             xPt = [p0[0], q0[1]];
         } 
-        else if (pVqH 
+        else if (pHqV 
             && Math.min(p0[0], p1[0]) < q0[0] && q0[0] < Math.max(p0[0], p1[0]) 
             && Math.min(q0[1], q1[1]) < p0[1] && p0[1] < Math.max(q0[1], q1[1])) 
         {
             xPt = [q0[0], p0[1]];
         } 
-        else
-            return null;
         return xPt;
 
         
@@ -94,8 +92,7 @@ namespace day03 {
                     if (xPt != null) {
                         var steps2ToCrossing = steps2 + Math.abs(xPt[0] - coords2[i-1][0]) + Math.abs(xPt[1] - coords2[i-1][1]); 
                         var steps1ToCrossing = steps1 + Math.abs(xPt[0] - coords1[j-1][0]) + Math.abs(xPt[1] - coords1[j-1][1]); 
-                        var crossingMD = Math.abs(xPt[0]) + Math.abs(xPt[1]);
-                        answerPart1 = Math.min(answerPart1, crossingMD);
+                        answerPart1 = Math.min(answerPart1, Math.abs(xPt[0]) + Math.abs(xPt[1]));
                         answerPart2 = Math.min(answerPart2, steps2ToCrossing + steps1ToCrossing);
                     }
                     steps1 += Math.abs(coords1[j][0] - coords1[j-1][0]) + Math.abs(coords1[j][1] - coords1[j-1][1]); 
