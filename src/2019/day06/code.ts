@@ -26,11 +26,7 @@ namespace day06 {
         }
 
         rootpath() {
-            if (this.parent == null)
-                return [];
-            const path = this.parent.rootpath();
-            path.push(this);
-            return path;
+            return this.parent == null ? [] : this.parent.rootpath().concat([this]);
         }
     }
     
