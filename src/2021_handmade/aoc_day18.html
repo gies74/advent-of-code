@@ -119,9 +119,40 @@ function start() {
 
   console.log(`Highest ${highest}\n`);
 }
+
+class RDPoint {
+    constructor(x,y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+var texelVlieland = new RDPoint(119200, 578700);
+var hartIJsselmeer = new RDPoint(156600, 530200);
+var woerden = new RDPoint(119500,453600);
+const stationTypeByXY = (someRDPoint) => {
+    const ALFEN = "ALFEN";
+    const AKA = "AKA";
+    
+    var _lineWoerdenIJsselmeer_a = (hartIJsselmeer.y - woerden.y) / (hartIJsselmeer.x - woerden.x);
+    var _lineTexelVlielandIJsselmeer_a = (hartIJsselmeer.y - texelVlieland.y) / (hartIJsselmeer.x - texelVlieland.x);
+    if (someRDPoint.x < hartIJsselmeer.x && 
+	    (someRDPoint.y - woerden.y) > _lineWoerdenIJsselmeer_a * (someRDPoint.x - woerden.x) && 
+		(someRDPoint.y - texelVlieland.y) < _lineTexelVlielandIJsselmeer_a * (someRDPoint.x - texelVlieland.x)) {
+        return AKA;
+    }
+    return ALFEN;    
+};
+
+var testGooiseMeren_for_ALFEN = new RDPoint(136608,479205);
+var testAmstelveen_for_AKA = new RDPoint(118047,478767);
+var testStavoren_for_ALFEN = new RDPoint(153046,544175);
+var testEnhuizen_for_AKA = new RDPoint(148588,524363);
+
+
 </script>
 </head>
 <body>
 <button onclick="start()">Start</button>
+<button onclick="stationTypeByXY(testEnhuizen_for_AKA)">RD</button>
 </body>
 </html>
