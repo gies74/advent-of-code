@@ -15,7 +15,7 @@ namespace day10 {
         const filteredCoords = coords.filter((_, j) => i != j);
         const relCoords = filteredCoords.map(c => [c[0]-coords[i][0], c[1]-coords[i][1]]);
         relCoords.forEach((c, ci) => {
-            view.push({"angle": -1 * Math.atan2(c[0], -1 * c[1]) + Math.PI, "dist": Math.abs(c[0])+Math.abs(c[1]), coord:filteredCoords[ci] });
+            view.push({"angle": -1 * Math.atan2(c[0], c[1]) + Math.PI, "dist": Math.abs(c[0])+Math.abs(c[1]), "coord":filteredCoords[ci] });
         });
         
         return view;
@@ -60,11 +60,23 @@ namespace day10 {
             } else {
                 const baseCoord = coords[mostAstIndex];
                 const view = getView(coords, mostAstIndex);
-                const sortedView = view.sort((v1, v2) => v1.angle != v2.angle ? v1.angle - v2.angle : v1.dist - v2.dist);
+                view.sort((v1, v2) => v1.angle != v2.angle ? v1.angle - v2.angle : v1.dist - v2.dist);
 
-                while (sortedView.length) {
-                    break;
+                const asteroids = [];
+                let angle = -1;
+                while (view.length) {
+                    const next = view.find(v => v.angle > angle);
+                    asteroids.push(next);
+
+                    angle = next.angle;
+                    const nextIndex = view.indexOf(next)
+                    if (nextIndex === view.length - 1) {
+                        angle = -1;
+                    }
+                    view.splice(nextIndex, 1);
+
                 }
+                return 100 * asteroids[199].coord[0] + asteroids[199].coord[1];
             }
 
         }, "2019", "day10", 
