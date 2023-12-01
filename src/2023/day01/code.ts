@@ -32,21 +32,16 @@ namespace day01 {
                 "nine": "9",
             };
 
-            let pat = null;
-
-            if (part == Part.One)
-                pat = /\d/g;
-            else
-                pat = new RegExp("(\\d|" + Object.keys(mapper).join('|') + ")", "g");
+            let pattern = (part == Part.One) ?  /\d/g : new RegExp("(\\d|" + Object.keys(mapper).join('|') + ")", "g");
 
             let numbers = input
                 .reduce((results, line) => {
                     var match;
                     const matches = [];
-                    pat.lastIndex = 0;
-                    while ( (match = pat.exec( line ) ) != null ) {
+                    pattern.lastIndex = 0;
+                    while ( (match = pattern.exec( line ) ) != null ) {
                         matches.push( match[0] );
-                        pat.lastIndex = match.index + 1;
+                        pattern.lastIndex = match.index + 1;
                     }  
                     results.push(matches);
                     return results;              
