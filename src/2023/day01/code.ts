@@ -39,19 +39,21 @@ namespace day01 {
             else
                 pat = new RegExp("(\\d|" + Object.keys(mapper).join('|') + ")", "g");
 
-            let numbers = input.reduce((results, line) => {
-                var match;
-                const matches = [];
-                pat.lastIndex = 0;
-                while ( (match = pat.exec( line ) ) != null ) {
-                    matches.push( match[0] );
-                    pat.lastIndex = match.index + 1;
-                  }  
-                results.push(matches);
-                return results;              
-            }, [])
-            .map(str2num => str2num.map(str => mapper[str] ? mapper[str] : str))
-            .map(arr => arr[0] + arr[arr.length-1]).map(n => parseInt(n));
+            let numbers = input
+                .reduce((results, line) => {
+                    var match;
+                    const matches = [];
+                    pat.lastIndex = 0;
+                    while ( (match = pat.exec( line ) ) != null ) {
+                        matches.push( match[0] );
+                        pat.lastIndex = match.index + 1;
+                    }  
+                    results.push(matches);
+                    return results;              
+                }, [])
+                .map(str2num => str2num.map(str => mapper[str] ? mapper[str] : str))
+                .map(arr => arr[0] + arr[arr.length-1])
+                .map(n => parseInt(n));
 
             return Utils.sum(numbers);
             
