@@ -30,19 +30,16 @@ namespace day02 {
         }
 
         allDrawsUnderMax() {
-            var self = this;
             const maxes = { "red": 12, "green": 13, "blue": 14 };
-            return Object.keys(maxes).every(color => Math.max(...self.draws.map(d => d.cubes[color])) <= maxes[color]);
+            return Object.keys(maxes).every(color => Math.max(...this.draws.map(d => d.cubes[color])) <= maxes[color], this);
         }
 
         power() {
-            var self = this;
             const maxes = { "red": 0, "green": 0, "blue": 0 };
-            Object.keys(maxes).forEach(color => maxes[color] = Math.max(...self.draws.map(d => d.cubes[color])));
+            Object.keys(maxes).forEach(color => maxes[color] = Math.max(...this.draws.map(d => d.cubes[color])), this);
             return maxes["red"] * maxes["green"] * maxes["blue"];
         }
     }
-
 
     Utils.main(
         /**
@@ -54,10 +51,6 @@ namespace day02 {
         (input: string[], part: Part) => {
 
             const games = input.map(l => new Game(l));
-            // part aspecific code here
-
-            // split input in case it has empty line delimited chunks
-            // var chunks = Utils.splitInput(input);
 
             let terms = [];
             if (part == Part.One) {
