@@ -49,15 +49,24 @@ export class Utils {
      * @param fillFunc optional function that must return a value the given dim dimensional coordinate
      * @returns 
      */
-    public static multiDimArray = (dimension: number, sizeAxis: number, fillFunc: (coord:any[]) => any = () => 0) => {
-        return Utils._multiDimArray(dimension, sizeAxis, fillFunc, []);
+
+    public static multiDimArray(dimension: number, sizeAxis: number, fillFunc?: (coord:any[]) => any);
+    public static multiDimArray(sizes: number[], fillFunc?: (coord:any[]) => any);
+    public static multiDimArray(arg1: number | number[], arg2?: number | ((coord:any[]) => any), fillFunc: (coord:any[]) => any = () => 0)
+    {
+        if ((typeof arg1 === 'object') !== (['undefined', 'function'].includes(typeof arg2))) 
+            throw Error("Wrong args");
+        const sizesDef = (typeof arg1 === 'object') ? arg1 : Array(arg1).fill(arg2);
+        const funcDef = (typeof arg2 === 'function') ? arg2 : fillFunc;
+        return Utils._multiDimArray(sizesDef , funcDef, []);
     }
 
-    private static _multiDimArray = (dimension: number, sizeAxis: number, fillFunc: (coord:any[]) => any, _coord) => {
-        if (dimension == 0) {
+    private static _multiDimArray = (sizes:number[], fillFunc: (coord:any[]) => any, _coord) => {
+        if (!sizes.length) {
             return fillFunc(_coord);
         }
-        return Array(sizeAxis).fill(0).map((_, i) => Utils._multiDimArray(dimension - 1, sizeAxis, fillFunc, _coord.concat([i])));
+        const dim = sizes.shift();        
+        return Array(dim).fill(0).map((_, i) => Utils._multiDimArray(sizes.slice(0), fillFunc, _coord.concat([i])));
     };
 
     /**

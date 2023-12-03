@@ -26,7 +26,7 @@ namespace day03 {
             // part 1
             const partNumbers:number[] = [];
             /* part 2 */
-            const numbersAdj2Stars = Array(input.length).fill(0).map(l => Array(input[0].length).fill(null).map(c => []));
+            const numbersAdj2Stars = Utils.multiDimArray([input.length, input[0].length], c => []);
 
             input.forEach((l, li) => {
                 const matches = [...l.matchAll(partNumPat)];
