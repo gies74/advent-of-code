@@ -49,15 +49,20 @@ export class Utils {
      * @param fillFunc optional function that must return a value the given dim dimensional coordinate
      * @returns 
      */
-
-    public static multiDimArray(dimension: number, sizeAxis: number, fillFunc?: (coord:any[]) => any);
-    public static multiDimArray(sizes: number[], fillFunc?: (coord:any[]) => any);
-    public static multiDimArray(arg1: number | number[], arg2?: number | ((coord:any[]) => any), fillFunc: (coord:any[]) => any = () => 0)
+    public static multiDimArray<T>(dimension: number, sizeAxis: number, fillFunc?: (coord:number[]) => T) : any[];
+    /**
+     * Create multi dimensional filled array
+     * @param sizes number of elements in each dimension
+     * @param fillFunc optional function that must return a value the given dim dimensional coordinate
+     * @returns
+     */
+    public static multiDimArray<T>(sizes: number[], fillFunc?: (coord:number[]) => T) : any[];
+    public static multiDimArray<T>(arg1: number | number[], arg2?: number | ((coord:number[]) => T), fillFunc?: (coord:number[]) => T) : any[]
     {
         if ((typeof arg1 === 'object') !== (['undefined', 'function'].includes(typeof arg2))) 
             throw Error("Wrong args");
         const sizesDef = (typeof arg1 === 'object') ? arg1 : Array(arg1).fill(arg2);
-        const funcDef = (typeof arg2 === 'function') ? arg2 : fillFunc;
+        const funcDef = (typeof arg2 === 'function') ? arg2 : (typeof fillFunc === 'function') ? fillFunc : () => 0;
         return Utils._multiDimArray(sizesDef , funcDef, []);
     }
 
