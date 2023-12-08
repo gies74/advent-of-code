@@ -8,113 +8,57 @@
 import { Part, Utils } from "../../generic";
 
 namespace day18 {
+
+    const doExecPrio = (stack:number[], part:Part, executor:string) => {
+            const last = stack.pop();
+            if (part == Part.One && executor === "*")
+                stack[stack.length - 1] *= last;
+            else
+                stack[stack.length - 1] += last;
+    }
+
+    const parseD18 = (pieces:string[], part:number):number => {
+        let piece = null;
+        let execPrio = false;
+        let executor = '';
+        let breakAll = false;
+
+        const stack:number[] = [];
+        while(piece = pieces.shift()) {
+            switch(piece) {
+                case "(":
+                    stack.push(parseD18(pieces, part));
+                    if (execPrio)
+                        doExecPrio(stack, part, executor);
+                    execPrio = false;
+                    executor = "";
+                    break;
+                case ")":
+                    breakAll = true;
+                    break;
+                case "*":
+                    execPrio = part === Part.One;
+                    executor = "*";
+                    break;
+                case "+":
+                    execPrio = true;
+                    executor = "+";
+                    //stack.splice(0, stack.length, stack.reduce((prod, s) => s * prod, 1));
+                    break;
+                default:
+                    stack.push(parseInt(piece));                
+                    if (execPrio)
+                        doExecPrio(stack, part, executor);
+                    execPrio = false;
+                    executor = "";
+                    break;
+            }
+            if (breakAll)
+                break;
+        }
+        return part === Part.One && executor !== "*" ? stack.reduce((cum, s) => s + cum, 0)  : stack.reduce((prod, s) => s * prod, 1);
+    };
     
-    /** ADD 2020-day18 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
-
-    const goLeft = (txt) => {
-        const numPat = /(.*)(\d+)$/;
-        if (numPat.test(txt)) {
-            const term  = txt.replace(numPat, "$2");
-            const remainder  = txt.replace(numPat, "$1");
-            return [remainder, term];
-        }
-        const chars = txt.split('');
-        let pos = chars.length - 1;
-        if (chars[pos] != ")") {
-            throw Error("Versteh es nicht");
-        }
-        const charStack = [chars[pos]];
-        pos--;
-        while (charStack.length > 0) {
-            if (pos < 0)
-                return [`${txt} + `, "0"];
-            if (chars[pos] == "(")
-                charStack.pop();
-            if (chars[pos] == ")")
-                charStack.push(chars[pos]);            
-            pos--;
-        }        
-        return [txt.substring(0, pos + 1), txt.substring(pos + 2, txt.length - 1)];        
-    }
-    const goRight = (txt) => {
-        const numPat = /^(\d+)(.*)/;
-        if (numPat.test(txt)) {
-            const term  = txt.replace(numPat, "$1");
-            const remainder  = txt.replace(numPat, "$2");
-            return [term, remainder];
-        }
-        const chars = txt.split('');
-        let pos = 0;
-        if (chars[pos] != "(") {
-            throw Error("Versteh es nicht");
-        }
-        const charStack = [chars[pos]];
-        pos++;
-        while (charStack.length > 0) {
-            if (pos >= chars.length)
-                return ["0", ` + ${txt}`];
-            if (chars[pos] == "(")
-                charStack.push(chars[pos]); 
-            if (chars[pos] == ")")
-                charStack.pop();           
-            pos++;
-        }        
-        return [txt.substring(0, pos), txt.substring(pos)];          
-    }
-
-    const insertParentheses = (line) => {
-        const parts = line.split(' + ');
-        for (var j=parts.length - 1; j>0; j--) {
-            const [lRemainder, lTerm] = goLeft(parts[j-1]);
-            const [rTerm, rRemainder] = goRight(parts[j]);
-            parts[j-1] = `${lRemainder}(${lTerm} + ${rTerm})${rRemainder}`;
-        }
-        return parts[0];
-    }
-
-
-    const parseRemainder = (term, remainder) => {
-        if (!remainder)
-            return term;
-        if (/ \+ $/.test(remainder)) {
-            remainder = remainder.replace(/ \+ $/, "");
-            return term + parseExp(remainder);
-        } else if (/ \* $/.test(remainder)) {
-            remainder = remainder.replace(/ \* $/, "");
-            return term * parseExp(remainder);
-        } else {
-            throw Error(`je ne comprends pas ${remainder}`);
-        }
-    }
-
-    const parseExp = (exp) => {
-        const numPat = /(.*)(\d+)$/;
-        if (numPat.test(exp)) {
-            let term = parseInt(exp.replace(numPat, "$2"));
-            var remainder = exp.replace(numPat, "$1");
-            return parseRemainder(term, remainder);
-        }
-        const chars = exp.split('');
-        let pos = chars.length - 1;
-        if (chars[pos] != ")") {
-            throw Error("Versteh es nicht");
-        }
-        const charStack = [chars[pos]];
-        pos--;
-        while (charStack.length > 0) {
-            if (pos < 0)
-                throw Error("What is this");
-            if (chars[pos] == "(")
-                charStack.pop();
-            if (chars[pos] == ")")
-                charStack.push(chars[pos]);            
-            pos--;
-        }        
-        return parseRemainder(parseExp(exp.substring(pos + 2, exp.length - 1)), exp.substring(0, pos + 1));
-    }
-
-
-
     Utils.main(
         /**
          * Main entry point of this day's code
@@ -125,14 +69,10 @@ namespace day18 {
         (input: string[], part: Part) => {
             
             // part aspecific code here
-            let sum = 0;
-            for (var line of input) {
-                if (part == Part.Two)
-                    line = insertParentheses(line);
-
-                let d = parseExp(line);
-                sum += d;
-            }
+            let sum = Utils.sum(input.map(l => { 
+                const res = parseD18(l.split(/ ?(\(|\)|\*|\+) ?/).filter(e => e !== ''), part); 
+                return res;
+            }));
 
             return sum;
 
@@ -140,5 +80,5 @@ namespace day18 {
         // set this switch to Part.Two once you've finished part one.
         Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        0);
 }
