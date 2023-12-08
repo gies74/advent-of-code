@@ -88,30 +88,6 @@ namespace day24 {
 
     generic.Utils.main((input: string[], part: Part = Part.One) => {
 
-        /** ADD START HERE */
-
-
-        
-        input = ["sesenwnenenewseeswwswswwnenewsewsw",
-"neeenesenwnwwswnenewnwwsewnenwseswesw",
-"seswneswswsenwwnwse",
-"nwnwneseeswswnenewneswwnewseswneseene",
-"swweswneswnenwsewnwneneseenw",
-"eesenwseswswnenwswnwnwsewwnwsene",
-"sewnenenenesenwsewnenwwwse",
-"wenwwweseeeweswwwnwwe",
-"wsweesenenewnwwnwsenewsenwwsesesenwne",
-"neeswseenwwswnwswswnw",
-"nenwswwsewswnenenewsenwsenwnesesenew",
-"enewnwewneswsewnwswenweswnenwsenwsw",
-"sweneswneswneneenwnewenewwneswswnese",
-"swwesenesewenwneswnwwneseswwne",
-"enesenwswwswneneswsenwnewswseenwsese",
-"wnwnesenesenenwwnenwsewesewsesesew",
-"nenewswnwewswnenesenwnesewesw",
-"eneswnwswnwsenenwnwnwwseeswneewsenese",
-"neswnwewnwnwseenwseesewsenwsweewe",
-"wseweeenwnesenwwwswnew"];
 
         input.map(line => splitDirs(line)).forEach(dirs => {
             const coord = REF_TILE.slice(0);
@@ -143,6 +119,6 @@ namespace day24 {
             
         return totBlack;
 
-    }, "2020", "day24", Part.Two);
+    }, "2020", "day24", Part.Two, 1);
 
 }
