@@ -30,11 +30,6 @@ namespace day24 {
         // 51:    0   0   0   0   0   0   0
         // 52:  0   0   0   0   0   0   0
 
-    /**
-     *  Any black tile with zero or more than 2 black tiles immediately adjacent to it is flipped to white.
-        Any white tile with exactly 2 black tiles immediately adjacent to it is flipped to black.
-     */
-
     const drawFloor = (flips) => {
         for (var rowI = 0; rowI < tileFloor.length; rowI++) {
             let s = (rowI % 2 == 0) ? "" : "  ";
@@ -43,6 +38,10 @@ namespace day24 {
         }
     };
     
+    /**
+     *  Any black tile with zero or more than 2 black tiles immediately adjacent to it is flipped to white.
+        Any white tile with exactly 2 black tiles immediately adjacent to it is flipped to black.
+     */
     const applyFlipRules = () => {
         const flips = Array(2*REF_TILE[1]).fill(0).map(() => Array(2*REF_TILE[0]).fill(false));
 
