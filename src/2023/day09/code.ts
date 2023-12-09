@@ -9,20 +9,15 @@ import { Part, Utils } from "../../generic";
 
 namespace day09 {
     
-    const extrapolateBack = (arr:number[]) => {
+    const extrapolate = (arr:number[], part:Part) => {
         if (arr.every(e => e === 0)) {
             return 0;
         }
         const diffs = arr.map((e,i) => i === 0 ? 0 : arr[i] - arr[i-1]).slice(1);
-        return arr[0] - extrapolateBack(diffs);
-    }
-
-    const extrapolate = (arr:number[]) => {
-        if (arr.every(e => e === 0)) {
-            return 0;
-        }
-        const diffs = arr.map((e,i) => i === 0 ? 0 : arr[i] - arr[i-1]).slice(1);
-        return extrapolate(diffs) - arr[arr.length - 1] ;
+        if (part === Part.One)
+            return extrapolate(diffs, part) + arr[arr.length - 1] ;
+        else
+            return arr[0] - extrapolate(diffs, part) ;
     }
 
     Utils.main(
@@ -34,26 +29,13 @@ namespace day09 {
          */
         (input: string[], part: Part) => {
 
-            const inputNums = input.map(l => l.split(' ').map(n => parseInt(n)));
-
-
-            if (part == Part.One) {
-
-                const extrapolants = inputNums.map(arr => extrapolate(arr));
-                let answerPart1 = Utils.sum(extrapolants);
-                return answerPart1;
-
-            } else {
-
-                const extrapolants = inputNums.map(arr => extrapolateBack(arr));
-                let answerPart1 = Utils.sum(extrapolants);
-                return answerPart1;
-
-            }
+            const inputNums:number[][] = input.map(l => l.split(' ').map(n => parseInt(n)));
+            const extrapolants:number[] = inputNums.map(arr => extrapolate(arr, part));
+            return Utils.sum(extrapolants);
 
         }, "2023", "day09", 
         // set this switch to Part.Two once you've finished part one.
-        Part.Two, 
+        Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
