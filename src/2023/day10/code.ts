@@ -18,10 +18,10 @@ namespace day10 {
         const hc = grid[pos[0]][pos[1]];
 
         const headDelta = {
-            "W": hc === "L" ? "N" : hc === "F" ? "S" : hc === "-" ? "W" : heading,
-            "E": hc === "J" ? "N" : hc === "7" ? "S" : hc === "-" ? "E" : heading,
-            "N": hc === "7" ? "W" : hc === "F" ? "E" : hc === "|" ? "N" : heading,
-            "S": hc === "J" ? "W" : hc === "L" ? "E" : hc === "|" ? "S" : heading,
+            "W": hc === "L" ? "N" : hc === "F" ? "S" : hc === "-" ? "W" : "?",
+            "E": hc === "J" ? "N" : hc === "7" ? "S" : hc === "-" ? "E" : "?",
+            "N": hc === "7" ? "W" : hc === "F" ? "E" : hc === "|" ? "N" : "?",
+            "S": hc === "J" ? "W" : hc === "L" ? "E" : hc === "|" ? "S" : "?",
         }
         return headDelta[heading];
     }
