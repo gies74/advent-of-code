@@ -44,7 +44,7 @@ namespace day12 {
         public get LBound():number {
             return this.sLength === 0 ? 0 : 1;
         }
-        
+
         public get UBound():number {
             return Number.POSITIVE_INFINITY;
         }
@@ -57,13 +57,11 @@ namespace day12 {
 
         constructor(line:string, sLengths:number[]) {
 
-            const damageStates = Array(sLengths.length).fill(null).map((_, i) => new DamageState(this, sLengths[i]), this);
             this.states = [new DelimState(this, 0)];
-            damageStates.forEach(d => {
-                this.states.push(d);
-                this.states.push(new DelimState(this, 1));
-            });
-            this.states[this.states.length-1].sLength = 0;
+            sLengths.forEach((len, idx) => {
+                this.states.push(new DamageState(this, len));
+                this.states.push(new DelimState(this, idx === sLengths.length - 1 ? 0 : 1));
+            }, this);
 
             this.chars = line.split('');
 
@@ -113,19 +111,19 @@ namespace day12 {
                 const [damageLine, numLine] = line.split(" ");
 
                 const realDamageLine = part === Part.One ? damageLine : Array(5).fill(damageLine).join("?");
-                const realNumLine = part === Part.One ? numLine : Array(5).fill(numLine).join(",");
 
+                const realNumLine = part === Part.One ? numLine : Array(5).fill(numLine).join(",");
                 const nums = realNumLine.split(",").map(n => parseInt(n));
 
                 const mm = new MarkovModel(realDamageLine, nums);
-                const numConfigs = mm.run();
-                return numConfigs;
+                return mm.run();
+
             });
             return Utils.sum(cum);
 
         }, "2023", "day12", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
