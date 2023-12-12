@@ -9,38 +9,51 @@ import { Part, Utils } from "../../generic";
 
 namespace day12 {
 
-    const potentialBreakups = (block:string):number[][] => {
-        if (!block.length)
-            return [[]];
-        const breakUps = [[block.length]];
-        const x = block.split(/(#+|\?)/g).filter(s => s !== "");
-        x.forEach((bit,idx) => {
-            if (bit[0] === "?") {
-                const p1 = potentialBreakups(x.slice(0, idx).join(""));
-                const p2 = potentialBreakups(x.slice(idx+1).join(""));
-                
+    const replaceQmarks = (line:string) => {
+        if (!/\?/.test(line))
+            return [line];
+        return replaceQmarks(line.replace("?", "#")).concat(replaceQmarks(line.replace("?", ".")));
+    }
 
-                breakUps.splice(breakUps.length,0, ...p1);
-                breakUps.splice(breakUps.length,0, ...p2);
-            }
-        });
-        return breakUps;
-    };
-    
-    const levenshtein = (springs:string[], nDamages:number[]):number => {
-        //spring = spring.replace(/$\.*/g, "");
-        if (nDamages.length === 0) {
-            if (springs.every(s => /^\?+$/.test(s)))
-                return 1;
-            return 0;
+    const damageLengths = (line) => {
+        return line.split(/\.+/).filter(s => s !== "").map(s => s.length);
+    }
+
+    class State {
+        sLength:number;
+        next:State = null;
+        pat = null;
+        constructor(sLength) {
+            this.sLength = sLength;
         }
+    }
 
-        const dSize = nDamages.shift();
-        return 0;
+    class DamageState extends State {
+        pat = /[\?#]/;
+    }
+
+    class DelimState extends State {
+        pat = /[\?\.]/;
+    }
+
+    class MarkovModel {
+        states:State[];
+        constructor(sLengths:number[]) {
+            const damageStates = Array(sLengths.length).fill(null).map((_, i) => new DamageState(sLengths[i]));
+            this.states = [new DelimState(0)];
+            damageStates.forEach(d => {
+                this.states[this.states.length-1].next = d;
+                this.states.push(d);
+                d.next = new DelimState(1);
+                this.states.push(d.next);
+            });
+            this.states[this.states.length-1].sLength = 0;
+        }
+    }
 
 
 
-    };
+
 
     Utils.main(
         /**
@@ -51,32 +64,44 @@ namespace day12 {
          */
         (input: string[], part: Part) => {
 
-            const bus = potentialBreakups("??##?"); // [[5],[4],[4],[3],[3],[1,3],[2],[1,2]]
-
-            const configs = input.map(line => {
-                const [springpart, damagepart] = line.split(" ");
-                const springs = springpart.split(/\.+/).filter(s => s !== "");
-                const nDamages = damagepart.split(",").map(n => parseInt(n));
-
-                return levenshtein(springs, nDamages);
 
 
-
-            });
             
 
             if (part == Part.One) {
-                return Utils.sum(configs);
+
+                let cum = input.map(line => {
+                    const [damageLine, numLine] = line.split(" ");
+                    const nums = numLine.split(",").map(n => parseInt(n));
+
+                    const all = replaceQmarks(damageLine);
+                    const configs = all.filter(s => {
+                        const lens = damageLengths(s);
+                        return lens.length === nums.length && lens.every((d,i) => d === nums[i]);
+                    });
+                    return configs.length;
+                });
+                return Utils.sum(cum);
+
 
 
             } else {
 
+                let cum = input.map(line => {
+                    const [damageLine, numLine] = line.split(" ");
+                    const nums = numLine.split(",").map(n => parseInt(n));
+    
+                    const mm = new MarkovModel(nums);
+    
+    
+    
+                });
 
             }
 
         }, "2023", "day12", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
