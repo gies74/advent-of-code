@@ -1,6 +1,6 @@
 /**
  * Advent of Code solution year00/day00
- * (c) 2022 Gies Bouwman
+ * (c) 2022,2023 Gies Bouwman
  * gies.bouwman@alliander.com
  * All rights reserved.
  */
@@ -20,22 +20,15 @@ namespace day00 {
          */
         (input: string[], part: Part) => {
             
-            // part aspecific code here
-
-            // split input in case it has empty line delimited chunks
             // var chunks = Utils.splitInput(input);
             let answerPart1 = 0;
             let answerPart2 = 0;
 
             if (part == Part.One) {
 
-                // part 1 specific code here
-
                 return answerPart1;
 
             } else {
-
-                // part 2 specific code here
 
                 return answerPart2;
 

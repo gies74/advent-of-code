@@ -11,38 +11,38 @@ import { Part, Utils } from "../../generic";
 namespace day12 {
 
     class State {
-        parent:MarkovModel;
-        sLength:number;
-        pat = null;
+        _parent:MarkovModel;
+        _sLength:number;
+        _pat:RegExp = null;
 
         constructor(parent:MarkovModel, sLength) {
-            this.parent = parent;
-            this.sLength = sLength;
+            this._parent = parent;
+            this._sLength = sLength;
         }
 
         public get LBound():number {
-            return this.sLength;
+            return this._sLength;
         }
 
         public get UBound():number {
-            return this.sLength;
+            return this._sLength;
         }
 
         public isValid(charIdx:number, n:number):boolean {
-            const chars = this.parent.chars.slice(charIdx+1, charIdx+1+n);
-            return chars.every(c => this.pat.test(c));
+            const chars = this._parent._chars.slice(charIdx+1, charIdx+1+n);
+            return chars.every(c => this._pat.test(c));
         }
     }
 
     class DamageState extends State {
-        pat = /[\?#]/;
+        _pat = /[\?#]/;
     }
 
     class DelimState extends State {
-        pat = /[\?\.]/;
+        _pat = /[\?\.]/;
 
         public get LBound():number {
-            return this.sLength === 0 ? 0 : 1;
+            return this._sLength === 0 ? 0 : 1;
         }
 
         public get UBound():number {
@@ -51,25 +51,25 @@ namespace day12 {
     }
 
     class MarkovModel {
-        states:State[];
-        chars:string[];
-        sSpace:number[][];
+        _states:State[];
+        _chars:string[];
+        _solSpace:number[][];
 
         constructor(line:string, sLengths:number[]) {
 
-            this.states = [new DelimState(this, 0)];
+            this._states = [new DelimState(this, 0)];
             sLengths.forEach((len, idx) => {
-                this.states.push(new DamageState(this, len));
-                this.states.push(new DelimState(this, idx === sLengths.length - 1 ? 0 : 1));
+                this._states.push(new DamageState(this, len));
+                this._states.push(new DelimState(this, idx === sLengths.length - 1 ? 0 : 1));
             }, this);
 
-            this.chars = line.split('');
+            this._chars = line.split('');
 
-            this.sSpace = Utils.multiDimArray([this.states.length, this.chars.length], () => null);
+            this._solSpace = Utils.multiDimArray([this._states.length, this._chars.length], () => null);
         }
 
         run() {
-            const numParsings = this.getNumParsings(this.states.length-1, this.chars.length-1);
+            const numParsings = this.getNumParsings(this._states.length-1, this._chars.length-1);
             return numParsings;
         }
 
@@ -80,10 +80,10 @@ namespace day12 {
                 return 1;
             if (stateIdx === -1 || charIdx <= -1 && stateIdx > 0)
                 return 0;
-            if (charIdx >= 0 && this.sSpace[stateIdx][charIdx] !== null)
-                return this.sSpace[stateIdx][charIdx];
+            if (charIdx >= 0 && this._solSpace[stateIdx][charIdx] !== null)
+                return this._solSpace[stateIdx][charIdx];
 
-            const state = this.states[stateIdx];
+            const state = this._states[stateIdx];
             let valid = true;
             for (var i=state.LBound; valid && i<=state.UBound; i++) {
                 valid = i <= charIdx + 1 && state.isValid(charIdx - i, i);
@@ -92,7 +92,7 @@ namespace day12 {
                 }
             }
 
-            this.sSpace[stateIdx][charIdx] = retVal;
+            this._solSpace[stateIdx][charIdx] = retVal;
 
             return retVal;
         }
