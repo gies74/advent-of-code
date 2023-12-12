@@ -10,20 +10,11 @@ import { Part, Utils } from "../../generic";
 
 namespace day12 {
 
-    const replaceQmarks = (line:string) => {
-        if (!/\?/.test(line))
-            return [line];
-        return replaceQmarks(line.replace("?", "#")).concat(replaceQmarks(line.replace("?", ".")));
-    }
-
-    const damageLengths = (line) => {
-        return line.split(/\.+/).filter(s => s !== "").map(s => s.length);
-    }
-
     class State {
         parent:MarkovModel;
         sLength:number;
         pat = null;
+
         constructor(parent:MarkovModel, sLength) {
             this.parent = parent;
             this.sLength = sLength;
@@ -32,6 +23,7 @@ namespace day12 {
         public get LBound():number {
             return this.sLength;
         }
+
         public get UBound():number {
             return this.sLength;
         }
@@ -48,20 +40,21 @@ namespace day12 {
 
     class DelimState extends State {
         pat = /[\?\.]/;
+
         public get LBound():number {
             return this.sLength === 0 ? 0 : 1;
         }
+        
         public get UBound():number {
             return Number.POSITIVE_INFINITY;
         }
-
-
     }
 
     class MarkovModel {
         states:State[];
-        sSpace:number[][];
         chars:string[];
+        sSpace:number[][];
+
         constructor(line:string, sLengths:number[]) {
 
             const damageStates = Array(sLengths.length).fill(null).map((_, i) => new DamageState(this, sLengths[i]), this);
@@ -84,27 +77,25 @@ namespace day12 {
 
         getNumParsings(stateIdx, charIdx) {
             let retVal = 0;
-            try {
-                if (stateIdx === -1 && charIdx === -1)
-                    return 1;
-                if (stateIdx === -1 || charIdx <= -1 && stateIdx > 0)
-                    return 0;
-                if (charIdx >= 0 && this.sSpace[stateIdx][charIdx] !== null)
-                    return this.sSpace[stateIdx][charIdx];
 
-                const state = this.states[stateIdx];
-                let valid = true;
-                for (var i=state.LBound; valid && i<=state.UBound; i++) {
-                    valid = i <= charIdx + 1 && state.isValid(charIdx - i, i);
-                    if (valid) {
-                        retVal += this.getNumParsings(stateIdx-1, charIdx - i);
-                    }
+            if (stateIdx === -1 && charIdx === -1)
+                return 1;
+            if (stateIdx === -1 || charIdx <= -1 && stateIdx > 0)
+                return 0;
+            if (charIdx >= 0 && this.sSpace[stateIdx][charIdx] !== null)
+                return this.sSpace[stateIdx][charIdx];
+
+            const state = this.states[stateIdx];
+            let valid = true;
+            for (var i=state.LBound; valid && i<=state.UBound; i++) {
+                valid = i <= charIdx + 1 && state.isValid(charIdx - i, i);
+                if (valid) {
+                    retVal += this.getNumParsings(stateIdx-1, charIdx - i);
                 }
-
-                this.sSpace[stateIdx][charIdx] = retVal;
-            } catch (excp) {
-                var x = 1;
             }
+
+            this.sSpace[stateIdx][charIdx] = retVal;
+
             return retVal;
         }
     }
