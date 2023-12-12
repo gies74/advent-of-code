@@ -76,7 +76,8 @@ namespace day10 {
                     });
                     
                     if (grid[pos[0]][pos[1]] === "S")
-                        break;
+                        
+                    break;
                     prevPos.splice(0,2,...pos);
                                         
                 }
