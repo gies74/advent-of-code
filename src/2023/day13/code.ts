@@ -10,9 +10,9 @@ import { Part, Utils } from "../../generic";
 namespace day13 {
 
     const vScore = (group, diffTarget) => {
-        for (var c = 1; c <= (group[0].length - 1); c += 1) {
+        for (var c = 1; c < group[0].length ; c += 1) {
             const numComps = Math.min(c, group[0].length-c);
-            const diff = group.map((row, ri) => Array(numComps).fill(0).map((_, ci) => group[ri][c-ci-1] === group[ri][c+ci] ? 0 : 1));
+            const diff = group.map((_, ri) => Array(numComps).fill(0).map((_, ci) => group[ri][c-ci-1] === group[ri][c+ci] ? 0 : 1));
             if (Utils.sum(diff) === diffTarget)
                 return c;
         }
@@ -20,7 +20,7 @@ namespace day13 {
     };
 
     const hScore = (group, diffTarget) => {
-        for (var c = 1; c <= (group.length - 1); c += 1) {
+        for (var c = 1; c < group.length; c += 1) {
             const numComps = Math.min(c, group.length-c);
             const diff = group[0].split("").map((_, ci) => Array(numComps).fill(0).map((_, ri) => group[c-ri-1][ci] === group[c+ri][ci] ? 0 : 1));
             if (Utils.sum(diff) === diffTarget)
