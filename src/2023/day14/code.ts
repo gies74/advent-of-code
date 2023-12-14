@@ -129,9 +129,12 @@ namespace day14 {
         }                       
     };
 
-    const load = (grid) => {
+    const calcload = (grid) => {
         return grid.reduce((cumR,row,ri) => cumR + row.reduce((cumC,cell) => { const tot = cumC + (cell === "O" ? (grid.length - ri) : 0); return tot;  }, 0), 0);
     }
+
+    const toString = (grid) => 
+        grid.map(row => row.join('')).join('');
    
 
 
@@ -151,22 +154,36 @@ namespace day14 {
             if (part == Part.One) {
 
                 tilt(grid, Dir.North);
+                return calcload(grid);
+
 
             } else {
-                
-                for (var x=0 ; x < 1000000000; x++) {
+
+                const gridStrings = [];
+                const loads = [];
+                let it = 0;
+                let gridString = "";
+                while (!gridStrings.includes(gridString)) { // gridStrings.length < 1000) { // 
+                    gridStrings.push(gridString);
                     [Dir.North, Dir.West, Dir.South, Dir.East].forEach(d => {
                         tilt(grid, d); 
                     });
+                    gridString = toString(grid);
+                    loads.push(calcload(grid));
                 }
+                console.log(`After ${gridStrings.length} cycles a gridconfig was detected again. First occurrence cycle #${gridStrings.indexOf(gridString)}`);
 
+                const loopLength = gridStrings.length - gridStrings.indexOf(gridString);
+                const offSetStart = gridStrings.indexOf(gridString);
+                const remainder = (1000000000 - offSetStart) % loopLength;
+
+                return loads[offSetStart + remainder - 1];
 
             }
-            return load(grid);
 
         }, "2023", "day14",
         // set this switch to Part.Two once you've finished part one.
         Part.Two,
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        0);
 }
