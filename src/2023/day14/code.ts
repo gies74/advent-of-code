@@ -17,116 +17,41 @@ namespace day14 {
     };
 
     const tilt = (grid:string[][], direction:Dir) => {
-        if (direction === Dir.North) {
-            for (var col=0; col < grid[0].length; col++) {
-                let ptrE = 0, ptrR = 0;
-                let solidPassed = true;
-                for (var ptr=0; ptr < grid.length; ptr++) {
-                    switch (grid[ptr][col]) {
-                        case "#":
-                            solidPassed = true;
-                            break;
-                        case ".":
-                            if (solidPassed) {
-                                ptrE = ptr;
-                                solidPassed = false;
-                            }
-                            break;
-                        case "O":
-                            ptrR = ptr;
-                            if (!solidPassed) {
-                                grid[ptrE][col] = "O";
-                                grid[ptrR][col] = ".";
-                                ptrE += 1;
-                            }                            
-                            break;
-                    }
-                }
+        const horiz = [Dir.West,Dir.East].includes(direction);
+        const positive = [Dir.West,Dir.North].includes(direction);
 
+        const rowscols = Array(horiz ? grid.length : grid[0].length).fill(0).map((_, i) => i);
+        const ptrRange = Array(horiz ? grid[0].length : grid.length).fill(0).map((_, i) => i);
+        if (!positive) {
+            ptrRange.reverse();
+        }
+
+        for (var rc of rowscols) {
+            let ptrE = 0, ptrR = 0;
+            let solidPassed = true;
+            
+            for (var ptr of ptrRange) {
+                switch (grid[horiz ? rc : ptr][horiz ? ptr : rc]) {
+                    case "#":
+                        solidPassed = true;
+                        break;
+                    case ".":
+                        if (solidPassed) {
+                            ptrE = ptr;
+                            solidPassed = false;
+                        }
+                        break;
+                    case "O":
+                        ptrR = ptr;
+                        if (!solidPassed) {
+                            grid[horiz ? rc: ptrE][horiz ? ptrE : rc] = "O";
+                            grid[horiz ? rc : ptrR][horiz ? ptrR : rc] = ".";
+                            ptrE += positive ? 1 : -1;
+                        }                            
+                        break;
+                }
             }
         }
-        else if (direction === Dir.South) {
-            for (var col=0; col < grid[0].length; col++) {
-                let ptrE = 0, ptrR = 0;
-                let solidPassed = true;
-                for (var ptr=grid.length-1;ptr >= 0; ptr--) {
-                    switch (grid[ptr][col]) {
-                        case "#":
-                            solidPassed = true;
-                            break;
-                        case ".":
-                            if (solidPassed) {
-                                ptrE = ptr;
-                                solidPassed = false;
-                            }
-                            break;
-                        case "O":
-                            ptrR = ptr;
-                            if (!solidPassed) {
-                                grid[ptrE][col] = "O";
-                                grid[ptrR][col] = ".";
-                                ptrE -= 1;
-                            }                            
-                            break;
-                    }
-                }
-
-            }
-        }    
-        else if (direction === Dir.West) {
-            for (var row=0; row < grid.length; row++) {
-                let ptrE = 0, ptrR = 0;
-                let solidPassed = true;
-                for (var ptr=0; ptr < grid[0].length; ptr++) {
-                    switch (grid[row][ptr]) {
-                        case "#":
-                            solidPassed = true;
-                            break;
-                        case ".":
-                            if (solidPassed) {
-                                ptrE = ptr;
-                                solidPassed = false;
-                            }
-                            break;
-                        case "O":
-                            ptrR = ptr;
-                            if (!solidPassed) {
-                                grid[row][ptrE] = "O";
-                                grid[row][ptrR] = ".";
-                                ptrE += 1;
-                            }                            
-                            break;
-                    }
-                }
-            }
-        }    
-        else if (direction === Dir.East) {
-            for (var row=0; row < grid.length; row++) {
-                let ptrE = 0, ptrR = 0;
-                let solidPassed = true;
-                for (var ptr=grid[0].length-1;ptr >= 0; ptr--) {
-                    switch (grid[row][ptr]) {
-                        case "#":
-                            solidPassed = true;
-                            break;
-                        case ".":
-                            if (solidPassed) {
-                                ptrE = ptr;
-                                solidPassed = false;
-                            }
-                            break;
-                        case "O":
-                            ptrR = ptr;
-                            if (!solidPassed) {
-                                grid[row][ptrE] = "O";
-                                grid[row][ptrR] = ".";
-                                ptrE -= 1;
-                            }                            
-                            break;
-                    }
-                }
-            }
-        }                       
     };
 
     const calcload = (grid) => {
@@ -135,8 +60,6 @@ namespace day14 {
 
     const toString = (grid) => 
         grid.map(row => row.join('')).join('');
-   
-
 
     Utils.main(
         /**
@@ -148,22 +71,18 @@ namespace day14 {
         (input: string[], part: Part) => {
 
             const grid = input.map(line => line.split(""));
-           
-            
 
             if (part == Part.One) {
 
                 tilt(grid, Dir.North);
                 return calcload(grid);
 
-
             } else {
 
                 const gridStrings = [];
                 const loads = [];
-                let it = 0;
                 let gridString = "";
-                while (!gridStrings.includes(gridString)) { // gridStrings.length < 1000) { // 
+                while (!gridStrings.includes(gridString)) {
                     gridStrings.push(gridString);
                     [Dir.North, Dir.West, Dir.South, Dir.East].forEach(d => {
                         tilt(grid, d); 
