@@ -8,8 +8,6 @@
 import { Part, Utils } from "./generic";
 
 namespace day00 {
-    
-    /** ADD year00-day00 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
     Utils.main(
         /**
