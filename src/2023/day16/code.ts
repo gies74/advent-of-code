@@ -55,7 +55,7 @@ namespace day16 {
             if (dirs.length > 1)
                 s = `${dirs.length}`;
             else if (dirs.length === 1)
-                s = { "n": "^", "s": "v", "w" : "<", "e": ">"}[dirs[0]];
+                s = { "n": "^", "s": "v", "w": "<", "e": ">"}[dirs[0]];
             return s;
         }
     }
@@ -73,25 +73,20 @@ namespace day16 {
          */
         (input: string[], part: Part) => {
 
-            const dirOrder = ["w", "n", "s", "e"];
-
             const grid = input.map(l => l.split("").map(ch => new LightCell(ch)));
-            const neighbourCoords = Utils.multiDimOffsets(2, true); // w,n,s,e
             grid.forEach((row,ri) => row.forEach((lc, ci) => {
-                neighbourCoords.forEach((delta,di) => {
-                    if (ri + delta[0] >= 0 && dirOrder[di] == "n")
-                        lc.neighbours["n"] = grid[ri + delta[0]][ci];
-                    if (ri + delta[0] < grid.length && dirOrder[di] == "s")
-                        lc.neighbours["s"] = grid[ri + delta[0]][ci];
-                    if (ci + delta[1] >= 0 && dirOrder[di] == "w")
-                        lc.neighbours["w"] = grid[ri][ci + delta[1]];
-                    if (ci + delta[1] < grid[0].length && dirOrder[di] == "e")
-                        lc.neighbours["e"] = grid[ri][ci + delta[1]];
-                });
+                if (ri > 0)
+                    lc.neighbours["n"] = grid[ri - 1][ci];
+                if (ri < grid.length - 1)
+                    lc.neighbours["s"] = grid[ri + 1][ci];
+                if (ci > 0)
+                    lc.neighbours["w"] = grid[ri][ci - 1];
+                if (ci < grid[0].length - 1)
+                    lc.neighbours["e"] = grid[ri][ci + 1];
             }));
 
-
             if (part == Part.One) {
+
                 grid[0][0].hit("e");
                 let answerPart1 = Utils.countTruthy(grid.map(r => r.map(lc => lc.isEnergized)));    
                 return answerPart1;
