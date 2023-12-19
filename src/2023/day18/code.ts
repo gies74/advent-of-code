@@ -10,11 +10,6 @@ var area = require('area-polygon');
 
 namespace day18 {
 
-    const around = Utils.multiDimOffsets(2, false);
-
-
-    
-
     Utils.main(
         /**
          * Main entry point of this day's code
