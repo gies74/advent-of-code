@@ -84,8 +84,6 @@ namespace day19 {
          */
         (input: string[], part: Part) => {
 
-
-            
             var chunks = Utils.splitInput(input);
             const objects = chunks[1].map(l => JSON.parse(l.replace(/([xmas])/g, '"$1"').replace(/=/g,':')));
             const rules = chunks[0].reduce((rs,l) => {
