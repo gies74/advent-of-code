@@ -125,16 +125,6 @@ namespace day19 {
 
             } else {
 
-
-                // const r = new Range(3,7);
-                // let x = r.break("<", 4);
-                // x = r.break("<", 3);
-                // x = r.break(">", 6);
-                // x = r.break(">", 7);
-
-
-
-
                 const ranges = [new RuleRange("in", {"x":new Range(1,4000), "m":new Range(1,4000), "a":new Range(1,4000), "s":new Range(1,4000)})];
                 let range;
                 while (range = ranges.find(rr => !["R","A"].includes(rr.rulename))) {
