@@ -54,6 +54,8 @@ namespace day19 {
                 }
                 if (fail) {                    
                     this.ranges[cond1] = fail;
+                } else {
+                    return outRanges;
                 }
             }
             this.rulename = rulepts[rulepts.length - 1];
