@@ -18,14 +18,15 @@ namespace day19 {
         }
         break(condOp, num) {
             return condOp === "<" ? [
-                (num > this.low) ? new Range(this.low, Math.min(num, this.high)) : null,
-                (num <= this.high) ? null : new Range(Math.max(num, this.low), this.high),
+                (num > this.low) ? new Range(this.low, Math.min(num-1, this.high)) : null,
+                (num <= this.high) ? new Range(Math.max(num, this.low), this.high) : null,
             ] : [
-                (num > this.low) ? new Range(Math.max(num, this.low), this.high) : null,
-                (num <= this.high) ? null : new Range(this.low, Math.min(num, this.high)),
+                (num < this.high) ? new Range(Math.max(num+1, this.low), this.high) : null,
+                (num >= this.low) ? new Range(this.low, Math.min(num, this.high)) : null,
             ]
         }
     }
+
     class RuleRange {
         rulename:string;
         ranges:{[letter:string]:Range};
@@ -38,16 +39,40 @@ namespace day19 {
             const outRanges:RuleRange[] = [];
             const rulepts = rule.split(",");
             let pt;
-            while (/:/.test(pt = rulepts.shift()))
+            let rr:RuleRange = this;
+
+            for (pt of rulepts)
             {
+                if (!/:/.test(pt))
+                    break;
                 const [cond1,cond2,cond3] = pt.split(":")[0].split(/([<>])/);
-                const [suc,fail] = this.ranges[cond1].break(cond2, parseInt(cond3));
+                const [suc,fail] = rr.ranges[cond1].break(cond2, parseInt(cond3));
+                if (suc) {
+                    const rr1 = this.clone(pt.split(":")[1]);
+                    rr1.ranges[cond1] = suc;
+                    outRanges.push(rr1);
+                }
+                if (fail) {                    
+                    this.ranges[cond1] = fail;
+                } else {
+                    return outRanges;
+                }
             }
-
-
+            this.rulename = rulepts[rulepts.length - 1];
+            // outRanges.push(this);
 
             return outRanges;
         }
+
+        clone(name) {
+            const ranges = Object.keys(this.ranges).reduce((d, it) => { d[it] = new Range(this.ranges[it].low,this.ranges[it].high); return d;}, {});
+            return new RuleRange(name, ranges);
+        }
+
+        prod() {
+            return Object.values(this.ranges).reduce((prod, rng) => prod * (rng.high - rng.low + 1), 1);
+        }
+
     }
 
     Utils.main(
@@ -58,7 +83,7 @@ namespace day19 {
          * @returns sought answer of given puzzle part
          */
         (input: string[], part: Part) => {
-            
+
             var chunks = Utils.splitInput(input);
             const objects = chunks[1].map(l => JSON.parse(l.replace(/([xmas])/g, '"$1"').replace(/=/g,':')));
             const rules = chunks[0].reduce((rs,l) => {
@@ -103,10 +128,10 @@ namespace day19 {
                 const ranges = [new RuleRange("in", {"x":new Range(1,4000), "m":new Range(1,4000), "a":new Range(1,4000), "s":new Range(1,4000)})];
                 let range;
                 while (range = ranges.find(rr => !["R","A"].includes(rr.rulename))) {
-                    ranges.splice(ranges.length,0,range.applyRule(rules[range.rulename]));
+                    ranges.splice(ranges.length,0,...range.applyRule(rules[range.rulename]));
                 }
 
-                let answerPart2 = 0;
+                let answerPart2 = Utils.sum(ranges.filter(r => r.rulename === "A").map(r => r.prod()));
                 return answerPart2;
 
             }
