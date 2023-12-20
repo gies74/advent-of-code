@@ -18,14 +18,6 @@ namespace day08 {
         }
     }
 
-    // https://decipher.dev/30-seconds-of-typescript/docs/lcm/
-    const lcm = (...arr) => {
-        const gcd = (x, y) => (!y ? x : gcd(y, x % y));
-        const _lcm = (x, y) => (x * y) / gcd(x, y);
-        return [...arr].reduce((a, b) => _lcm(a, b));
-    };       
-
-
     
     /** ADD 2023-day08 SPECIFIC OBJECTS, CLASSES AND FUNCTIONS HERE  */
 
@@ -70,7 +62,7 @@ namespace day08 {
                 counts.push(cnt);
             });
     
-            return lcm(...counts);
+            return Utils.lcm(...counts);
 
         }, "2023", "day08", 
         // set this switch to Part.Two once you've finished part one.

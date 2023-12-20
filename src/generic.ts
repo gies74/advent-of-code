@@ -146,5 +146,16 @@ export class Utils {
             bb
         );      
         return intersection;
-    }        
+    }
+    
+    /***
+     * Least Common Multiple
+     * https://decipher.dev/30-seconds-of-typescript/docs/lcm/
+     */
+    public static lcm = (...arr) => {
+        const gcd = (x, y) => (!y ? x : gcd(y, x % y));
+        const _lcm = (x, y) => (x * y) / gcd(x, y);
+        return [...arr].reduce((a, b) => _lcm(a, b));
+    };       
+
 }
