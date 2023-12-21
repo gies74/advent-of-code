@@ -77,14 +77,14 @@ namespace day21 {
 
             } else {
 
-                let answerPart2 = 0;
-                return answerPart2;
+                console.log("see Computation.xlsx")
+                return 0;
 
             }
 
         }, "2023", "day21", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
