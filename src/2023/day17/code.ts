@@ -9,7 +9,7 @@ import { Part, Utils } from "../../generic";
 
 namespace day17 {
 
-    const repTail = inp => {
+    const repTail = (inp:string):string[] => {
         const lastChar = inp[inp.length-1];
         const re = RegExp(`${lastChar}*$`);
         return [lastChar, inp.match(re)[0]];
@@ -19,7 +19,7 @@ namespace day17 {
         return Array(num).fill(0).map((_, i) => Array(i+1).fill(char).join(''));
     };
 
-    const opposDir = { "n": "s", "s": "n", "e": "w", "w": "e"};
+    const opposDir:{[key:string]:string} = { "n": "s", "s": "n", "e": "w", "w": "e"};
 
     class SearchCell {
         y:number;
@@ -50,7 +50,11 @@ namespace day17 {
             const starts = inits(lastChar, reps.length);
             if (starts.every(key => !this.leastLoss[key] || this.leastLoss[key] > totLoss + this.loss))
             {
-                this.leastLoss[reps] = totLoss + this.loss;
+                const starts2 = inits(lastChar, 3);
+                starts2.filter(s2 => s2.length >= reps.length).forEach(s2 => {
+                    if (!this.leastLoss[s2] || totLoss + this.loss < this.leastLoss[s2])  
+                        this.leastLoss[s2] = totLoss + this.loss;
+                }, this);
                 if (!['s', 'e'].some(d => this.neighbours[d]))
                     return;
                 Object.keys(this.neighbours).filter(k => k !== lastChar).forEach(k => {
