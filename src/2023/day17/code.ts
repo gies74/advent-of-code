@@ -9,51 +9,56 @@ import { Part, Utils } from "../../generic";
 
 namespace day17 {
 
-    class BackTrack {
-        cell: SearchCell;
-        totLoss: number;
+    const repTail = inp => {
+        const lastChar = inp[inp.length-1];
+        const re = RegExp(`${lastChar}*$`);
+        return [lastChar, inp.match(re)[0]];
+    };
 
-        constructor(cell:SearchCell, totLoss:number) {
-            this.cell = cell;
-            this.totLoss = totLoss;
-        }
+    const inits = (char:string, num:number):string[] => {
+        return Array(num).fill(0).map((_, i) => Array(i+1).fill(char).join(''));
+    };
 
-        conseqLen(dir:string) {
-            return 0;
-        }
-    }
+    const opposDir = { "n": "s", "s": "n", "e": "w", "w": "e"};
 
     class SearchCell {
+        y:number;
+        x:number;
         loss:number;
-        leastLoss: {[dir:string]:BackTrack} = {};
+        leastLoss: {[dir:string]:number} = {};
         neighbours: {[dir:string]:SearchCell} = {};
-        constructor (loss:string) {
+
+        constructor (loss:string, y:number, x:number) {
             this.loss = parseInt(loss);
-            this.leastLoss = {};
+            this.y = y;
+            this.x = x;
         }
 
-        findBest(path, init) {
-            const dirs = init ? ['n', 'w'] : ['n', 'w','s','e'];
-            if (!['n','w'].some(d => this.neighbours[d], this)) {
-                return this.loss;
+        update(sender:string, totLoss:number) {
+            if (!sender.length) { 
+                Object.keys(this.neighbours).forEach(k => {
+                   this.neighbours[k].update(opposDir[k], 0);
+                });
+                return;
             }
-            if (!init && path.length >= 3 && /^(n{3}|w{3}|s{3}|e{3})/.test(path)) {
-                const i = dirs.indexOf(path[0]);
-                dirs.splice(i,1);
-            }         
-            const losses = dirs.filter(dir => this.neighbours[dir]).map(dir => {                
-
-                const nb = this.neighbours[dir];
-
-                if (!this.leastLoss[dir]) {
-                    this.leastLoss[dir] = new BackTrack(nb, Number.MAX_VALUE);
-                    this.leastLoss[dir].totLoss = this.loss + nb.findBest(dir + path, init);
-                }
-                return this.leastLoss[dir].totLoss;
-
-            }, this);
-            return Math.min(...losses);
+            if (sender.length > (this.x + this.y) * 1.4)
+                return;
+            const [lastChar, reps] = repTail(sender);
+            if (reps.length >= 4)
+                return;
+            
+            const starts = inits(lastChar, reps.length);
+            if (starts.every(key => !this.leastLoss[key] || this.leastLoss[key] > totLoss + this.loss))
+            {
+                this.leastLoss[reps] = totLoss + this.loss;
+                if (!['s', 'e'].some(d => this.neighbours[d]))
+                    return;
+                Object.keys(this.neighbours).filter(k => k !== lastChar).forEach(k => {
+                    this.neighbours[k].update(sender + opposDir[k], totLoss + this.loss);
+                });
+            }
         }
+
     }
 
     Utils.main(
@@ -65,47 +70,25 @@ namespace day17 {
          */
         (input: string[], part: Part) => {
 
-            const grid = input.map(l => l.split('').map(loss => new SearchCell(loss)));
+            const grid = input.map((l,y) => l.split('').map((loss,x) => new SearchCell(loss, y, x)));
             grid.forEach((row,ri) => row.forEach((lc, ci) => {
-                if (ri > 0)
-                    lc.neighbours["n"] = grid[ri - 1][ci];
+                if (ci < grid[0].length - 1)
+                    lc.neighbours["e"] = grid[ri][ci + 1];
                 if (ri < grid.length - 1)
                     lc.neighbours["s"] = grid[ri + 1][ci];
                 if (ci > 0)
                     lc.neighbours["w"] = grid[ri][ci - 1];
-                if (ci < grid[0].length - 1)
-                    lc.neighbours["e"] = grid[ri][ci + 1];
-            }));   
-            
-            grid[grid.length-1][grid[0].length-1].findBest("", true);
-            grid.forEach(r => r.forEach(c => {
-                ['n', 'w','s','e'].filter(dir => c.neighbours[dir]).map(dir => {                
-                    const nb = c.neighbours[dir];
-                    if (!c.leastLoss[dir]) {
-                        c.leastLoss[dir] = new BackTrack(nb, c.loss + Math.min(...Object.values(nb.leastLoss).map(ll => ll.totLoss)));
-                    }
-    
-                });
+                if (ri > 0)
+                    lc.neighbours["n"] = grid[ri - 1][ci];
             }));
-            const minLoss = grid[grid.length-1][grid[0].length-1].findBest("", false);
-            
-            // var chunks = Utils.splitInput(input);
-            let answerPart1 = minLoss;
-            let answerPart2 = 0;
 
-            if (part == Part.One) {
+            grid[0][0].update("", 0);
 
-                return answerPart1;
-
-            } else {
-
-                return answerPart2;
-
-            }
+            return Math.min(...Object.values(grid[grid.length-1][grid[0].length-1].leastLoss));
 
         }, "2023", "day17", 
         // set this switch to Part.Two once you've finished part one.
         Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        2);
+        0);
 }
