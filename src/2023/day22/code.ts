@@ -48,7 +48,7 @@ namespace day22 {
             return this.supports.every(supported => supported.leansOn.length > 1);
         }
 
-        allSupportsExclusively(fallingAnyway:Brick[] = []) {
+        allSupportsExclusively(fallingAnyway:Brick[] = []):Brick[] {
             const ex = this.supportsExclusively(fallingAnyway);
             return ex.concat(...ex.map(b => b.allSupportsExclusively(fallingAnyway.concat(ex.filter(e => e !== b)))));
         }
@@ -58,7 +58,7 @@ namespace day22 {
         }
     }
 
-    const range =(start, end) => Array.from({length: (end - start + 1)}, (v, k) => k + start);
+    const range =(start:number, end:number):number[] => Array.from({length: (end - start + 1)}, (v, k) => k + start);
 
     Utils.main(
         /**
@@ -120,5 +120,5 @@ namespace day22 {
         // set this switch to Part.Two once you've finished part one.
         Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        2);
+        0);
 }

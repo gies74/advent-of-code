@@ -3,8 +3,21 @@
     "outDir": "./out",              
     "rootDir": "./src",
     "target": "ES5",             
-    "sourceMap": true,              
+    "sourceMap": true,
+    "incremental": true,
+    "noResolve": false,
+    "noEmitOnError": false,
+    "noImplicitAny": true,
+    "declaration": true,              
+    "downlevelIteration": true,
     "moduleResolution": "node",
-    "downlevelIteration": true     
-  }
+    "skipLibCheck": true     
+  },
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -66,7 +66,7 @@ export class Utils {
         return Utils._multiDimArray(sizesDef , funcDef, []);
     }
 
-    private static _multiDimArray = (sizes:number[], fillFunc: (coord:any[]) => any, _coord) => {
+    private static _multiDimArray = (sizes:number[], fillFunc: (coord:any[]) => any, _coord:number[]):any[] => {
         if (!sizes.length) {
             return fillFunc(_coord);
         }
@@ -96,7 +96,7 @@ export class Utils {
         r = r.filter(v => v.some((e: any): boolean => e !== 0));
         // filter out co-ordinates that are not orthogonal
         if (ortho)
-            r = r.filter(v => Utils.countTruthy(v.map(c => Math.abs(c))) === 1);
+            r = r.filter(v => Utils.countTruthy(v.map((c:number) => Math.abs(c))) === 1);
         return r;
     }
 
@@ -152,9 +152,9 @@ export class Utils {
      * Least Common Multiple
      * https://decipher.dev/30-seconds-of-typescript/docs/lcm/
      */
-    public static lcm = (...arr) => {
-        const gcd = (x, y) => (!y ? x : gcd(y, x % y));
-        const _lcm = (x, y) => (x * y) / gcd(x, y);
+    public static lcm = (...arr: number[]):number => {
+        const gcd = (x:number, y:number):number => (!y ? x : gcd(y, x % y));
+        const _lcm = (x:number, y:number):number => (x * y) / gcd(x, y);
         return [...arr].reduce((a, b) => _lcm(a, b));
     };       
 

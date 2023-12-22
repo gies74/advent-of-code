@@ -11,7 +11,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const _doInit = async (answer) => {
+const _doInit = async (answer:string) => {
 
   if (!process.env["AOC_COOKIE"] || process.env["AOC_COOKIE"].length < 100) {
     console.error(`Please read README.md, it looks like .env file has no valid AoC cookie!`);
@@ -35,7 +35,7 @@ const _doInit = async (answer) => {
     code = code.replace(/day00/g, name);
     code = code.replace(/year00/g, generic.Settings.YEAR);
     code = code.replace("./generic", "../../generic");
-    fs.writeFile(localCodePath, code, (err) => {
+    fs.writeFile(localCodePath, code, (err:Error) => {
       if (err)
         console.error(`[ERR] Error: ${err}`);
       else 
@@ -68,7 +68,7 @@ const _doInit = async (answer) => {
     }
 
     console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localFilePath)}`);
-    await https.get(options, (res) => {
+    await https.get(options, (res:any) => {
       const fileStream = fs.createWriteStream(localFilePath);
       res.pipe(fileStream);
       fileStream.on('finish', () => {
@@ -87,7 +87,7 @@ const _doInit = async (answer) => {
   });
 };
 
-export const aocInit = (argv) => {
+export const aocInit = (argv:string[]) => {
   if (argv.length < 3) {
     rl.question(`Welke dag van ${generic.Settings.YEAR}? `, _doInit);
     return;
