@@ -5,12 +5,13 @@
  * All rights reserved.
  */
 
+import { assert } from "console";
 import { Part, Utils } from "../../generic";
 
 namespace day23 {
 
-    const nodes:SlopeNode[] = [];
-    const edges:Edge[] = [];
+    const globalNodes:SlopeNode[] = [];
+    const globalEdges:Edge[] = [];
     const slopeCharDir:{[k:string]:number[]} = { "v": [1,0], "^": [-1,0], "<": [0,-1], ">": [0,1]};
     const deltas = Utils.multiDimOffsets(2, true);
 
@@ -27,10 +28,39 @@ namespace day23 {
             this.y = y;
             this.x = x;
             this.char = char;
-            nodes.push(this);
+            globalNodes.push(this);
         }
         toString() {
             return `${this.char}(${this.y},${this.x})`;
+        }
+        get edges() {
+            return [].concat(this.inEdges, this.outEdges);
+        }
+
+        bouwman_p2(target:SlopeNode, inEdge:Edge = null) {
+            let longest = -1;
+            if (target === this)
+                return 0;            
+            if (this.visited)
+                return longest;
+            this.visited = true;
+
+            const edges:Edge[] = (inEdge ? this.oppositeEdges(inEdge) : this.edges).filter(e => !e.passed);
+            edges.forEach(edge => {
+                edge.passed = true;
+                const oppositeNode = edge.oppositeNode(this);
+                const dist = oppositeNode.bouwman_p2(target, edge);
+                longest = Math.max(longest, (dist !== -1) ? dist + edge.length : dist);
+                edge.passed = false;
+            }, this);
+            this.visited = false;
+
+            return longest;
+        }
+
+        oppositeEdges(e:Edge) {
+            assert(this.edges.includes(e));
+            return this.edges.filter(ed => ed !== e);
         }
     }
 
@@ -38,16 +68,21 @@ namespace day23 {
         sn1:SlopeNode;
         sn2:SlopeNode;
         length:number;
+        passed:boolean = false;
         constructor(sn1:SlopeNode, sn2:SlopeNode, length: number) {
             this.sn1 = sn1;
             this.sn2 = sn2;
             this.length = length;
             sn1.outEdges.push(this);
             sn2.inEdges.push(this);
-            edges.push(this);
+            globalEdges.push(this);
         }
         toString() {
             return `${this.sn1.toString()} - ${this.sn2} [${this.length.toString()}]`;
+        }
+        oppositeNode(n:SlopeNode) {
+            assert([this.sn1, this.sn2].includes(n));
+            return n === this.sn1 ? this.sn2 : this.sn1;
         }
     }
 
@@ -64,26 +99,26 @@ namespace day23 {
     const takeStep = (grid:string[][], prevY:number, prevX:number, curY:number, curX:number):number[] => {
         const delta = deltas.find(d => {
             const dy = curY + d[0], dx = curX + d[1];
-            return !(dy == prevY && dx === prevX) && grid[dy][dx] === ".";
+            return !(dy == prevY && dx === prevX) && /[.x]/.test(grid[dy][dx]);
         });
         return delta;
     };
 
-    const traceGrid = (grid:string[][], start:SlopeNode, end:SlopeNode) => {
+    const traceGrid_p1 = (grid:string[][], start:SlopeNode, end:SlopeNode) => {
         const stack:SlopeNode[] = [start];
         let node:SlopeNode;
         while (node = stack.pop()) {
             const sLength = 1, y = node.y + slopeCharDir[node.char][0], x = node.x + slopeCharDir[node.char][1];
 
             surveyDownSlopes(grid, y, x).forEach(coord => {
-                const snIdx = nodes.findIndex(sn => sn.y === coord[0] && sn.x === coord[1]);
+                const snIdx = globalNodes.findIndex(sn => sn.y === coord[0] && sn.x === coord[1]);
                 let sn;
                 if (snIdx === -1) {
                     sn = new SlopeNode(coord[0], coord[1], grid[coord[0]][coord[1]]);
                     stack.push(sn);
                 }
                 else
-                    sn = nodes[snIdx];
+                    sn = globalNodes[snIdx];
                 new Edge(node, sn, sLength + 1);
             });
 
@@ -93,14 +128,14 @@ namespace day23 {
                     let length = sLength + 1, step;
                     while (true) {
                         surveyDownSlopes(grid, dy, dx).forEach(coord => {
-                            const snIdx = nodes.findIndex(sn => sn.y === coord[0] && sn.x === coord[1]);
+                            const snIdx = globalNodes.findIndex(sn => sn.y === coord[0] && sn.x === coord[1]);
                             let sn;
                             if (snIdx === -1) {
                                 sn = new SlopeNode(coord[0], coord[1], grid[coord[0]][coord[1]]);
                                 stack.push(sn);
                             }
                             else
-                                sn = nodes[snIdx];
+                                sn = globalNodes[snIdx];
                             new Edge(node, sn, length + 1);
                         });
                         step = takeStep(grid, cy, cx, dy, dx);
@@ -115,6 +150,33 @@ namespace day23 {
         }
     };
 
+    const traceGrid_p2 = (grid:string[][]) => {
+        globalNodes.forEach(node => {
+            const ds = deltas.filter(d => {
+                const dy = node.y + d[0], dx = node.x + d[1];
+                return dy >= 0 && dy < grid.length && dx >= 0 && dx < grid[0].length && /[.x]/.test(grid[dy][dx]);
+            });
+            ds.forEach(d => {
+                let cy = node.y, cx = node.x;
+                let length = 1, dy = cy + d[0], dx = cx + d[1];
+                let endNode;
+                while (true) {
+                    if (endNode = globalNodes.find(n => n.y === dy && n.x === dx)) {
+                        if (!globalEdges.some(e => (e.sn1 === node && e.sn2 === endNode || e.sn2 === node && e.sn1 === endNode) && e.length === length)) {
+                            new Edge(node, endNode, length);
+                        }
+                        return;
+                    }
+                    const step = takeStep(grid, cy, cx, dy, dx);
+                    if (!step)
+                        return;
+                    length++;
+                    cy = dy, cx = dx, dy = cy + step[0], dx = cx + step[1];
+                }
+            });
+        });
+    }
+
     const bestPath = (sn:SlopeNode):string[] => {
         if (!sn.bestInEdge)
             return [];
@@ -125,7 +187,7 @@ namespace day23 {
         }
     }
 
-    const bouwman = (start:SlopeNode, target:SlopeNode, allNodes:SlopeNode[]):number => {
+    const bouwman_p1 = (start:SlopeNode, target:SlopeNode, allNodes:SlopeNode[]):number => {
 
         let collection:SlopeNode[] = [start];
         start.distFromStart = 0;
@@ -174,10 +236,7 @@ namespace day23 {
             const grid = input.map(l => l.split(''));
             const startCoord = [0, input[0].indexOf(".")];
             const endCoord = [input.length - 1, input[input.length - 1].indexOf(".")];
-            if (part === Part.One) {
-                grid[startCoord[0]][startCoord[1]] = "v";
-                grid[endCoord[0]][endCoord[1]] = "v";
-            } else {
+            if (part === Part.Two) {
                 grid.forEach((row,ri) => row.forEach((cell,ci) => {
                     if (/[v<>^]/.test(cell)) {
                         grid[ri][ci] = ".";
@@ -190,9 +249,13 @@ namespace day23 {
                     }).length;
                     if (nPaths > 2) {
                         grid[ri][ci] = "x";
+                        new SlopeNode(ri, ci, "x");
                     }
                 }));
             }
+            grid[startCoord[0]][startCoord[1]] = part === Part.One ? "v" : "x";
+            grid[endCoord[0]][endCoord[1]] = part === Part.One ? "v" : "x";
+
 
             const start = new SlopeNode(startCoord[0], startCoord[1], grid[startCoord[0]][startCoord[1]]);
             const end = new SlopeNode(endCoord[0], endCoord[1], grid[endCoord[0]][endCoord[1]]);
@@ -200,14 +263,14 @@ namespace day23 {
 
             if (part == Part.One) {
 
-                traceGrid(grid, start, end);
-                let answerPart1 = bouwman(start, end, nodes);
+                traceGrid_p1(grid, start, end);
+                let answerPart1 = bouwman_p1(start, end, globalNodes);
                 return answerPart1;
 
             } else {
 
-
-                let answerPart2 = 0;
+                traceGrid_p2(grid);
+                let answerPart2 = start.bouwman_p2(end);
                 return answerPart2;
 
             }

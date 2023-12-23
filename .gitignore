@@ -1,3 +1,4 @@
+tsconfig.tsbuildinfo
 .env
 node_modules
 advent-of-code.code-workspace
