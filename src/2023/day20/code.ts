@@ -5,7 +5,6 @@
  * All rights reserved.
  */
 
-import { sign } from "crypto";
 import { Part, Utils } from "../../generic";
 
 namespace day20 {
@@ -160,7 +159,7 @@ namespace day20 {
 
             } else {
 
-                return Utils.lcm(...Object.values(watches));
+                return 0; // Utils.lcm(...Object.values(watches));
 
             }
 
