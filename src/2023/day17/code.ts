@@ -9,60 +9,17 @@ import { Part, Utils } from "../../generic";
 
 namespace day17 {
 
-    const repTail = (inp:string):string[] => {
-        const lastChar = inp[inp.length-1];
-        const re = RegExp(`${lastChar}*$`);
-        return [lastChar, inp.match(re)[0]];
-    };
-
-    const inits = (char:string, num:number):string[] => {
-        return Array(num).fill(0).map((_, i) => Array(i+1).fill(char).join(''));
-    };
-
-    const opposDir:{[key:string]:string} = { "n": "s", "s": "n", "e": "w", "w": "e"};
-
     class SearchCell {
         y:number;
         x:number;
         loss:number;
-        leastLoss: {[dir:string]:number} = {};
-        neighbours: {[dir:string]:SearchCell} = {};
+        leastLoss:number; 
 
         constructor (loss:string, y:number, x:number) {
             this.loss = parseInt(loss);
             this.y = y;
             this.x = x;
         }
-
-        update(sender:string, totLoss:number) {
-            if (!sender.length) { 
-                Object.keys(this.neighbours).forEach(k => {
-                   this.neighbours[k].update(opposDir[k], 0);
-                });
-                return;
-            }
-            if (sender.length > (this.x + this.y) * 1.4)
-                return;
-            const [lastChar, reps] = repTail(sender);
-            if (reps.length >= 4)
-                return;
-            
-            const starts = inits(lastChar, reps.length);
-            if (starts.every(key => !this.leastLoss[key] || this.leastLoss[key] > totLoss + this.loss))
-            {
-                const starts2 = inits(lastChar, 3);
-                starts2.filter(s2 => s2.length >= reps.length).forEach(s2 => {
-                    if (!this.leastLoss[s2] || totLoss + this.loss < this.leastLoss[s2])  
-                        this.leastLoss[s2] = totLoss + this.loss;
-                }, this);
-                if (!['s', 'e'].some(d => this.neighbours[d]))
-                    return;
-                Object.keys(this.neighbours).filter(k => k !== lastChar).forEach(k => {
-                    this.neighbours[k].update(sender + opposDir[k], totLoss + this.loss);
-                });
-            }
-        }
-
     }
 
     Utils.main(
@@ -75,24 +32,23 @@ namespace day17 {
         (input: string[], part: Part) => {
 
             const grid = input.map((l,y) => l.split('').map((loss,x) => new SearchCell(loss, y, x)));
-            grid.forEach((row,ri) => row.forEach((lc, ci) => {
-                if (ci < grid[0].length - 1)
-                    lc.neighbours["e"] = grid[ri][ci + 1];
-                if (ri < grid.length - 1)
-                    lc.neighbours["s"] = grid[ri + 1][ci];
-                if (ci > 0)
-                    lc.neighbours["w"] = grid[ri][ci - 1];
-                if (ri > 0)
-                    lc.neighbours["n"] = grid[ri - 1][ci];
-            }));
+            grid[0][0].leastLoss = 0;
 
-            grid[0][0].update("", 0);
+            for (var i=1; i<grid.length + grid[0].length - 1; i++) {
+                for (var y0=Math.min(i, grid.length - 1); y0 >= Math.max(0, i - grid.length + 1); y0--) {
+                    const x0 = i - y0;
+                    grid[y0][x0].leastLoss = grid[y0][x0].loss + (x0 === 0 ? grid[y0-1][x0].leastLoss : y0 === 0 ? grid[y0][x0-1].leastLoss : Math.min(grid[y0-1][x0].leastLoss, grid[y0][x0-1].leastLoss))
+                }
 
-            return Math.min(...Object.values(grid[grid.length-1][grid[0].length-1].leastLoss));
+            }
+
+
+
+            return 0;
 
         }, "2023", "day17", 
         // set this switch to Part.Two once you've finished part one.
         Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        0);
+        1);
 }
