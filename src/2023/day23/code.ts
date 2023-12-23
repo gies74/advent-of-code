@@ -173,24 +173,41 @@ namespace day23 {
 
             const grid = input.map(l => l.split(''));
             const startCoord = [0, input[0].indexOf(".")];
-            grid[startCoord[0]][startCoord[1]] = "v";
             const endCoord = [input.length - 1, input[input.length - 1].indexOf(".")];
-            grid[endCoord[0]][endCoord[1]] = "v";
+            if (part === Part.One) {
+                grid[startCoord[0]][startCoord[1]] = "v";
+                grid[endCoord[0]][endCoord[1]] = "v";
+            } else {
+                grid.forEach((row,ri) => row.forEach((cell,ci) => {
+                    if (/[v<>^]/.test(cell)) {
+                        grid[ri][ci] = ".";
+                    }
+                }));
+                grid.forEach((row,ri) => row.forEach((cell,ci) => {
+                    const nPaths = deltas.filter(d => {
+                        const dy = ri + d[0], dx = ci + d[1];
+                        return cell === "." && dy >= 0 && dy < grid.length && dx >= 0 && dx < grid[0].length && grid[dy][dx] === ".";
+                    }).length;
+                    if (nPaths > 2) {
+                        grid[ri][ci] = "x";
+                    }
+                }));
+            }
 
             const start = new SlopeNode(startCoord[0], startCoord[1], grid[startCoord[0]][startCoord[1]]);
-            const end = new SlopeNode(endCoord[0], endCoord[1], grid[endCoord[0]][endCoord[1]])
-            traceGrid(grid, start, end);
-            
-            
-            let answerPart1 = bouwman(start, end, nodes);
-            let answerPart2 = 0;
+            const end = new SlopeNode(endCoord[0], endCoord[1], grid[endCoord[0]][endCoord[1]]);
+
 
             if (part == Part.One) {
 
+                traceGrid(grid, start, end);
+                let answerPart1 = bouwman(start, end, nodes);
                 return answerPart1;
 
             } else {
 
+
+                let answerPart2 = 0;
                 return answerPart2;
 
             }

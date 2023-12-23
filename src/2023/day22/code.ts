@@ -110,6 +110,7 @@ namespace day22 {
             } else {
                 const answerPart2 = Utils.sum(allBricks.map(b => {
                     const supEx = b.allSupportsExclusively();
+                    supEx.splice(0, supEx.length, ...b.allSupportsExclusively(supEx))
                     const s = new Set(supEx);
                     return s.size;
                 }));
