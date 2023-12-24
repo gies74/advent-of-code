@@ -18,11 +18,11 @@ export class Utils {
      * @param year Given year
      * @param day Given day
      */
-    public static main = (processFunc: (input: string[], part: Part) => any, year: string, day: string, part: Part = Part.One, example: number = 0) : void => {
+    public static main = (processFunc: (input: string[], part: Part, example?:number) => any, year: string, day: string, part: Part = Part.One, example: number = 0) : void => {
         const input_sfx = (example == 0) ? `` : `_example${example}`;
         const input = fs.readFileSync(`${__dirname}/../data/${year}/${day}/input${input_sfx}.txt`).toString().split("\n").slice(0, -1);
         const sTime = Date.now();
-        const result = processFunc(input, part);
+        const result = processFunc(input, part, example);
         console.log(`Answer part ${part}: ${result} (time elapsed: ${Date.now() - sTime} ms)`);
     }
 
