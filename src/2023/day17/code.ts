@@ -15,29 +15,25 @@ namespace day17 {
         
 
         const openSet: SearchCell[] = [start];
-        start.scoreUpdated(0, null);
-        start.fScore = 0; // start.h;
+        start.gScores.push(new GScore(start, null));
+        start.fScore = 0; //start.h; 
 
         while (openSet.length) {
 
-            const lowestFScore = Math.min(...openSet.map(sc => sc.fScore));
+            const lowestFScore = Math.min(...openSet.map(sc => sc !== goal && sc.fScore));
             const current = openSet.find(sc => sc !== goal && sc.fScore === lowestFScore);
 
-            if (openSet.length === 1 && openSet.includes(goal)) {
-                console.log(goal.path);
-                return Math.min(...Object.values(goal.gScores).map(gs => gs.gScore));
+            if (!current) {
+                console.log(goal.lowestGScore.toString());
+                return goal.lowestGScore.gScore;
             }
 
             openSet.splice(openSet.indexOf(current), 1)
 
-            Object.keys(current.neighbours).forEach(k => { 
-                const neighbour = current.neighbours[k];
-                const tentativeScore = current.gScores[k].gScore + neighbour.loss;
-                let gss: DirGScore[];
-
-                if ((gss = neighbour.scoreUpdated(tentativeScore, current)).length) {
+            current.neighbours.forEach(neighbour => {
+                if (neighbour.improveScores(current.gScores)) {
                     // neighbour.gScore = tentativeScore;
-                    neighbour.fScore = 0; // tentativeScore + neighbour.h
+                    neighbour.fScore = 0; // current.lowestGScore.gScore + neighbour.h;
                     if (!openSet.includes(neighbour))
                         openSet.push(neighbour);
                 }
@@ -47,47 +43,58 @@ namespace day17 {
         return 10E6;
     };
 
-    class DirGScore {
+    class GScore {
         owner:SearchCell;
-        dir:string;
-        gScore:number = 10E6;
-        cameFrom:SearchCell = null;
-        constructor(owner, d) {
+        cameFrom:GScore = null;
+        constructor(owner, cameFrom) {
             this.owner = owner;
-            this.dir = d;
+            this.cameFrom = cameFrom;
         }
 
-        canUpdate(comingFrom) {
-            if (!comingFrom)
-                return true;
-            const history:SearchCell[] = this.cameFromHistory(comingFrom, 3);
-            const reversing = comingFrom.getDirection(history[history.length-1]) === this.dir;
-
-            if (reversing || history.length === 3 && history.concat([this.owner]).every((cf,i) => i === 0 || history[i-1].getDirection(cf) === this.dir, this))
-                return false;  
-            return true;          
-
+        history(n):number[][] {
+            if (n === 0)
+                return [];
+            const coords = [[this.owner.y, this.owner.x]];
+            return (this.cameFrom ? this.cameFrom.history(n - 1) : []).concat(coords);
         }
 
-        cameFromHistory(referringSearchCell:SearchCell, n) {
-            if (n == 1) {
-                return [referringSearchCell];
+        linearity(asking?:SearchCell):number[] {
+            const history = this.history(3).reverse();
+            const yx = asking ? [asking.y, asking.x] : history.shift();
+            const retval = [0, 0];
+            let xConstant = true, yConstant = true, crd:number[];
+            while ((xConstant || yConstant) && (crd = history.shift())) {
+                yConstant &&= crd[0] === yx[0];
+                xConstant &&= crd[1] === yx[1];
+                if (xConstant) {
+                    retval[0] = yx[0] - crd[0];
+                }
+                if (yConstant) {
+                    retval[1] = yx[1] - crd[1];
+                }
             }
-            const referringGScore =  referringSearchCell.gScores[referringSearchCell.getDirection(this.owner)];
-            if (!referringGScore.cameFrom)
-                return [referringSearchCell];
-            return referringGScore.cameFromHistory(referringGScore.cameFrom, n-1).concat([referringSearchCell]);
-        }
-    }
+            return retval;
 
+        }
+
+        get gScore() {
+            return !this.cameFrom ? 0 : this.owner.loss + this.cameFrom.gScore;
+        }
+
+        toString() {
+            const path = this.history(100).map(coord => `(${coord[0]},${coord[1]})`).join('');
+            return `[${this.gScore}] ${path}`;
+        }
+
+    }
 
     class SearchCell {
         y:number;
         x:number;
         loss:number;
         fScore:number = 10E6;
-        neighbours:{[windDir:string]:SearchCell} = {};
-        gScores:{[windDir:string]:DirGScore} = {};
+        neighbours:SearchCell[] = [];
+        gScores:GScore[] = [];
 
         constructor (loss:string, y:number, x:number) {
             this.loss = parseInt(loss);
@@ -95,41 +102,48 @@ namespace day17 {
             this.x = x;
         }
 
-        getDirection(sc:SearchCell) {
-            return Object.keys(this.neighbours).find(k => this.neighbours[k] === sc);
+        gScoreAcceptable(gScore:GScore):boolean {
+            const history = gScore.history(4);
+            return (history.length < 4 || history.some(c => c[0] !== this.y, this) && history.some(c => c[1] !== this.x, this)) && !history.some(c => c[0] === this.y && c[1] === this.x, this);
         }
 
-        scoreUpdated(tentativeScore:number, cameFrom:SearchCell) {
-            return Object.values(this.gScores).filter(gs => {
-                if (tentativeScore < gs.gScore && gs.canUpdate(cameFrom)) {
-                    gs.gScore = tentativeScore;
-                    gs.cameFrom = cameFrom;
-                    return true;
+
+        improveScores(gScores:GScore[]) {
+            let improved:boolean = false;
+            gScores.forEach(offeredGScore => {
+                if (!this.gScoreAcceptable(offeredGScore)) 
+                    return;
+                const offeredLinearity = offeredGScore.linearity(this);
+
+                this.gScores.forEach(myGScore => {
+                    const myLinearity = myGScore.linearity();
+                    if ([0,1].every(xy => offeredLinearity[xy] === 0 ? myLinearity[xy] === 0 : (myLinearity[xy] / offeredLinearity[xy]) >= 1) && offeredGScore.gScore + this.loss < myGScore.gScore) {
+                        myGScore.cameFrom = offeredGScore;
+                        improved = true;
+                        return;
+                    }
+                    const checkpoint1 = true;
+                }, this);
+                if (!this.gScores.find(myGScore => {
+                    const myLinearity = myGScore.linearity();
+                    return [0,1].every(xy => offeredLinearity[xy] === 0 ? myLinearity[xy] === 0 : (myLinearity[xy] / offeredLinearity[xy]) <= 1) && myGScore.gScore <= this.loss + offeredGScore.gScore;
+                }, this)) {
+                    this.gScores.push(new GScore(this, offeredGScore));
+                    improved = true;
                 }
-                return false;
+                const checkpoint2 = true;
             }, this);
+
+            return improved;
         }
 
-        get lowestGScore():DirGScore {
-            const min = Math.min(...Object.values(this.gScores).map(gs => gs.gScore));
-            return Object.values(this.gScores).find(gs => gs.gScore === min);
+        get lowestGScore():GScore {
+            const min = Math.min(...this.gScores.map(gs => gs.gScore));
+            return this.gScores.find(gs => gs.gScore === min);
         }
 
         get h() {
             return (this.x + this.y);
-        }
-
-        get path() {
-            const gs = this.lowestGScore;
-            const history = gs.cameFromHistory(gs.cameFrom, 500);
-            history.push(this);
-            return history.map(sc => sc.toString()).join(" - ");
-        }
-
-        createGScores() {
-            Object.keys(this.neighbours).forEach(k => {
-                this.gScores[k] = new DirGScore(this, k);
-           });
         }
 
         toString() {
@@ -149,25 +163,24 @@ namespace day17 {
             const grid = input.map((l,y) => l.split('').map((loss,x) => new SearchCell(loss, y, x)));
             grid.forEach((row,y) => row.forEach((sc, x) => {
                 if (y > 0)
-                    sc.neighbours["n"] = grid[y-1][x];
+                    sc.neighbours.push(grid[y-1][x]);
                 if (y < grid.length - 1)
-                    sc.neighbours["s"] = grid[y+1][x];
+                    sc.neighbours.push(grid[y+1][x]);
                 if (x > 0)
-                    sc.neighbours["w"] = grid[y][x-1];
+                    sc.neighbours.push(grid[y][x-1]);
                 if (x < row.length - 1)
-                    sc.neighbours["e"] = grid[y][x+1];
-                sc.createGScores();
+                    sc.neighbours.push(grid[y][x+1]);
             }));
 
             const score = aStar(grid[0][0], grid[grid.length-1][grid[0].length-1], grid);
             // const score = aStar(grid[grid.length-1][grid[0].length-1], grid[0][0], grid);
 
             return score;
-            // answer 763 too high
+            // answer 755 wrong, 763 too high
 
         }, "2023", "day17", 
         // set this switch to Part.Two once you've finished part one.
         Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        2);
 }
