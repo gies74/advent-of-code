@@ -54,9 +54,57 @@ namespace day22 {
         }
 
         toString() {
-            return `${this.name}`;    
+            return `${this.name} - z:${this.zs[0]===this.zs[1] ? this.zs[0] : this.zs[0]+'-'+this.zs[1]}` 
+                    + `,y:${this.ys[0]===this.ys[1] ? this.ys[0] : this.ys[0]+'-'+this.ys[1]}` 
+                    + `,x:${this.xs[0]===this.xs[1] ? this.xs[0] : this.xs[0]+'-'+this.xs[1]}`
+                    + `,t:${this.top}`;    
+        }
+        toInput() {
+            return `${this.xs[0]},${this.ys[0]},${this.zs[0]}~${this.xs[1]},${this.ys[1]},${this.zs[1]}`;
         }
     }
+
+    function createBricks(input: string[]) {
+        const allBricks = input.map(line => new Brick(line));
+
+        const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+        allBricks.sort((b1, b2) => b1.lowZ === b2.lowZ ? (b1.ys[0] === b2.ys[0] ? b1.xs[0] - b2.xs[0] : b1.ys[0] - b2.ys[0]) : b1.lowZ - b2.lowZ);
+        allBricks.forEach((b, i) => b.name = abc[i % abc.length]);
+        return allBricks;
+    }
+
+    function dropOntoStack(allBricks:Brick[]) {
+
+        const floor = new Brick("0,0,0~9,9,0");
+        floor.name = "floor";
+        floor.isFloor = true;
+
+        const memory: Brick[][] = Utils.multiDimArray(2, 10, () => floor);
+
+        allBricks.forEach(b => {
+
+            const rx = range(b.xs[0], b.xs[1]);
+            const ry = range(b.ys[0], b.ys[1]);
+
+            let stackTop = -1;
+            rx.forEach(x => ry.forEach(y => {
+                stackTop = Math.max(memory[x][y].top, stackTop);
+            }));
+            const topBricks = [...new Set(rx.reduce((st1, x) => st1.concat(ry.reduce((st2, y) => {
+                if (memory[x][y].top === stackTop)
+                    st2.push(memory[x][y]);
+                return st2;
+            }, [])), []))] as Brick[];
+
+            b.leansOn = topBricks;
+            topBricks.forEach(tb => tb.supports.push(b));
+            rx.forEach(x => ry.forEach(y => {
+                memory[x][y] = b;
+            }));
+        });
+        return allBricks;
+    }    
 
     const range =(start:number, end:number):number[] => Array.from({length: (end - start + 1)}, (v, k) => k + start);
 
@@ -69,52 +117,32 @@ namespace day22 {
          */
         (input: string[], part: Part) => {
 
-            const abc = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-            const allBricks = input.map(line => new Brick(line));
-            allBricks.sort((b1,b2) => b1.lowZ - b2.lowZ);
-            allBricks.forEach((b,i) => b.name = abc[i % abc.length]);
-
-            const floor = new Brick("1,1,0~9,9,0");
-            floor.name = "floor";
-            floor.isFloor = true;
-
-            const memory:Brick[][] = Utils.multiDimArray(2, 10, () => floor);
-
-            allBricks.forEach(b => {
-
-                const rx = range(b.xs[0],b.xs[1]);
-                const ry = range(b.ys[0],b.ys[1]);
-
-                let stackTop = -1;
-                rx.forEach(x => ry.forEach(y => {
-                    stackTop = Math.max(memory[x][y].top, stackTop); 
-                }));
-                const topBricks = [...new Set(rx.reduce((st1,x) => st1.concat(ry.reduce((st2,y) => {
-                    if (memory[x][y].top === stackTop)
-                        st2.push(memory[x][y]);
-                    return st2;
-                }, [])), []))] as Brick[];
-                
-                b.leansOn = topBricks;
-                topBricks.forEach(tb => tb.supports.push(b));
-                rx.forEach(x => ry.forEach(y => {
-                    memory[x][y] = b; 
-                }));
-            });
+            const allBricks = createBricks(input);
+            dropOntoStack(allBricks);
+            const refTops = allBricks.map(b => b.top);
 
             if (part == Part.One) {
                 const nDisintegratable = Utils.countTruthy(allBricks.filter(b => b.disintegratable()));
                 let answerPart1 = nDisintegratable;
                 return answerPart1;
             } else {
-                const answerPart2 = Utils.sum(allBricks.map(b => {
-                    const supEx = b.allSupportsExclusively();
-                    supEx.splice(0, supEx.length, ...b.allSupportsExclusively(supEx))
-                    const s = new Set(supEx);
-                    return s.size;
-                }));
-                return answerPart2;
+                const valsM2 = input.map((l,li) => {
+                    const inputLackingLine = allBricks.map(b => b.toInput()).filter((_, lineIdx) => lineIdx !== li);
+                    const someBricks = createBricks(inputLackingLine);
+                    dropOntoStack(someBricks);
+                    const compTops = someBricks.map(b => b.top);
+                    compTops.splice(li, 0, -1);
+                    const diff = refTops.map((t, i) => i === li ? 0 : t - compTops[i]);
+                    return Utils.countTruthy(diff);
+                });
+
+                // const valsM1 = allBricks.map(b => {
+                //     const supEx = b.allSupportsExclusively();
+                //     const s = new Set(supEx);
+                //     const v = s.size;
+                //     return v;
+                // });
+                return Utils.sum(valsM2); // 478981 wrong
             }
 
         }, "2023", "day22", 
@@ -122,4 +150,6 @@ namespace day22 {
         Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
+
+
 }

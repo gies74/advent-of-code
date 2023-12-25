@@ -16,7 +16,7 @@ namespace day00 {
          * @param part report answer for either part one or two
          * @returns sought answer of given puzzle part
          */
-        (input: string[], part: Part) => {
+        (input: string[], part: Part, example: number = 0) => {
             
             // var chunks = Utils.splitInput(input);
             let answerPart1 = 0;

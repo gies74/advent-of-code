@@ -128,11 +128,13 @@ namespace day24 {
 
             } else {
 
+                // per dimension, we have 3 unknowns: throw position, throw velocity and time of impact
+                // so we only need three arbitrary stones
                 const somestones = hailstones.slice(0,3);
 
                 const equations = somestones.map((os,i) => os.toString1("xyz"[i])).join("\r\n");
                 console.log(equations);
-                // enter results into
+                // too lazy to program linear equation system solver, so using one online. Copy paste console lines into
                 // https://quickmath.com/webMathematica3/quickmath/equations/solve/advanced.jsp
 
                 return 0;
