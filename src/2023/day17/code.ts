@@ -11,19 +11,19 @@ import { Dir } from "fs";
 
 namespace day17 {
 
-    const aStar = (start:SearchCell, goal:SearchCell, grid:SearchCell[][]):number => {
+    const aStar = (start:SearchCell, goal:SearchCell, grid:SearchCell[][], part:Part):number => {
         
 
         const openSet: SearchCell[] = [start];
         start.gScores.push(new GScore(start, null));
-        start.fScore = 0; //start.h; 
+        start.fScore = start.h; 
 
         while (openSet.length) {
 
-            const lowestFScore = Math.min(...openSet.map(sc => sc !== goal && sc.fScore));
-            const current = openSet.find(sc => sc !== goal && sc.fScore === lowestFScore);
+            const lowestFScore = Math.min(...openSet.map(sc => sc.fScore));
+            const current = openSet.find(sc => sc.fScore === lowestFScore);
 
-            if (!current) {
+            if (current === goal) {
                 console.log(goal.lowestGScore.toString());
                 return goal.lowestGScore.gScore;
             }
@@ -31,9 +31,9 @@ namespace day17 {
             openSet.splice(openSet.indexOf(current), 1)
 
             current.neighbours.forEach(neighbour => {
-                if (neighbour.improveScores(current.gScores)) {
+                if (neighbour.improveScores(current.gScores, part)) {
                     // neighbour.gScore = tentativeScore;
-                    neighbour.fScore = 0; // current.lowestGScore.gScore + neighbour.h;
+                    neighbour.fScore = current.lowestGScore.gScore + neighbour.h;
                     if (!openSet.includes(neighbour))
                         openSet.push(neighbour);
                 }
@@ -58,8 +58,39 @@ namespace day17 {
             return (this.cameFrom ? this.cameFrom.history(n - 1) : []).concat(coords);
         }
 
-        linearity(asking?:SearchCell):number[] {
-            const history = this.history(3).reverse();
+        satisfies_10_4_criterium() {
+            const history = this.history(11).reverse();
+            let refCrd = history.shift();
+            if (!refCrd)
+                return true;
+            const linearity:number[][] = [];
+            let xConstant = true, yConstant = true, crd:number[];
+            while (crd = history.shift()) {
+                if (yConstant && crd[0] !== refCrd[0]) 
+                {
+                    linearity.push([0, 0]);
+                    yConstant = false;
+                    xConstant = true;
+                } else if (xConstant && crd[1] !== refCrd[1]) {
+                    linearity.push([0, 0]);
+                    xConstant = false;
+                    yConstant = true;
+                }
+                if (xConstant) {
+                    linearity[linearity.length - 1][0] += Math.sign(refCrd[0] - crd[0]);
+                } else {
+                    linearity[linearity.length - 1][1] += Math.sign(refCrd[1]- crd[1]);
+                }
+                refCrd = crd;
+            }
+            if (!linearity.length)
+                return true;
+            const valid = linearity.slice(1).every(l => [0,1].every(xy => l[xy] === 0 && l[xy] > 4 && l[xy] < 10));
+            return valid;
+        }
+
+        linearity(asking:SearchCell = null, depth:number = 4):number[] {
+            const history = this.history(depth).reverse();
             const yx = asking ? [asking.y, asking.x] : history.shift();
             const retval = [0, 0];
             let xConstant = true, yConstant = true, crd:number[];
@@ -73,8 +104,7 @@ namespace day17 {
                     retval[1] = yx[1] - crd[1];
                 }
             }
-            return retval;
-
+            return retval;0
         }
 
         get gScore() {
@@ -102,16 +132,22 @@ namespace day17 {
             this.x = x;
         }
 
-        gScoreAcceptable(gScore:GScore):boolean {
-            const history = gScore.history(4);
-            return (history.length < 4 || history.some(c => c[0] !== this.y, this) && history.some(c => c[1] !== this.x, this)) && !history.some(c => c[0] === this.y && c[1] === this.x, this);
+        gScoreAcceptable(gScore:GScore, part:Part):boolean {
+            const history = gScore.history(part === Part.One ? 4 : 11);
+            let acceptable = !history.some(c => c[0] === this.y && c[1] === this.x, this)
+            if (part === Part.One) {
+                acceptable = history.length < 4 || acceptable && history.some(c => c[0] !== this.y, this) && history.some(c => c[1] !== this.x, this);
+            } else {
+                acceptable = gScore.satisfies_10_4_criterium();
+            }
+            return acceptable;
         }
 
 
-        improveScores(gScores:GScore[]) {
+        improveScores(gScores:GScore[], part:Part) {
             let improved:boolean = false;
             gScores.forEach(offeredGScore => {
-                if (!this.gScoreAcceptable(offeredGScore)) 
+                if (!this.gScoreAcceptable(offeredGScore, part)) 
                     return;
                 const offeredLinearity = offeredGScore.linearity(this);
 
@@ -172,15 +208,15 @@ namespace day17 {
                     sc.neighbours.push(grid[y][x+1]);
             }));
 
-            const score = aStar(grid[0][0], grid[grid.length-1][grid[0].length-1], grid);
+            const score = aStar(grid[0][0], grid[grid.length-1][grid[0].length-1], grid, part);
             // const score = aStar(grid[grid.length-1][grid[0].length-1], grid[0][0], grid);
 
             return score;
-            // answer 755 wrong, 763 too high
+            // answer 749 wrong, 763 too high
 
         }, "2023", "day17", 
         // set this switch to Part.Two once you've finished part one.
         Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        2);
+        0);
 }
