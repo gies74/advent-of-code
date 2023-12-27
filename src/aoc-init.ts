@@ -11,7 +11,7 @@ const rl = readline.createInterface({
   output: process.stdout
 });
 
-const _doInit = async (answer:string) => {
+const _doInit = async (answer: string) => {
 
   if (!process.env["AOC_COOKIE"] || process.env["AOC_COOKIE"].length < 100) {
     console.error(`Please read README.md, it looks like .env file has no valid AoC cookie!`);
@@ -35,10 +35,10 @@ const _doInit = async (answer:string) => {
     code = code.replace(/day00/g, name);
     code = code.replace(/year00/g, generic.Settings.YEAR);
     code = code.replace("./generic", "../../generic");
-    fs.writeFile(localCodePath, code, (err:Error) => {
+    fs.writeFile(localCodePath, code, (err: Error) => {
       if (err)
         console.error(`[ERR] Error: ${err}`);
-      else 
+      else
         console.info(`[INFO] Code file ${path.resolve(localCodePath)} succesfully prepared.`)
     });
   }
@@ -47,10 +47,10 @@ const _doInit = async (answer:string) => {
   let localDataPath = `${__dirname}/../data/${generic.Settings.YEAR}/${name}`;
 
 
-  const downloads = [{"path": "/input", "localPath": "input.txt"}, {"path": "", "localPath": "puzzle.html"}];
+  const downloads = [{ "path": "/input", "localPath": "input.txt" }, { "path": "", "localPath": "puzzle.html" }];
 
 
-  const promises = downloads.map(async spec => new Promise(async (resolve) => { 
+  const promises = downloads.map(async spec => new Promise(async (resolve) => {
     const options = {
       host: `adventofcode.com`,
       port: 443,
@@ -68,7 +68,7 @@ const _doInit = async (answer:string) => {
     }
 
     console.info(`[INFO] Attempting to download from ${options.path} to ${path.resolve(localFilePath)}`);
-    await https.get(options, (res:any) => {
+    await https.get(options, (res: any) => {
       const fileStream = fs.createWriteStream(localFilePath);
       res.pipe(fileStream);
       fileStream.on('finish', () => {
@@ -77,17 +77,38 @@ const _doInit = async (answer:string) => {
       });
     });
   }));
-  await Promise.all(promises); 
+  await Promise.all(promises);
   console.info('[INFO] All downloads complete!');
 
   let html = fs.readFileSync(`${localDataPath}/puzzle.html`).toString();
   html = html.replace("/static/style.css", "../../static/style.css");
-  fs.writeFile(`${localDataPath}/puzzle.html`, html, () => {
+  const promWriteExample = extractExample(html, localDataPath);
+  const promWritePuzzle = new Promise(puzzleWritten => {
+    fs.writeFile(`${localDataPath}/puzzle.html`, html, () => {
+      puzzleWritten(null);
+    });
+  });
+  Promise.all([promWriteExample, promWritePuzzle]).then(() => {
     process.exit();
   });
 };
 
-export const aocInit = (argv:string[]) => {
+const extractExample = async (html, localDataPath) => {
+  return new Promise(attemptComplete => {
+    try {
+      const example = html.split("your puzzle input")[1].split("</code>")[0].split('<code>')[1];
+      fs.writeFile(`${localDataPath}/input_example1.txt`, example, () => {
+        console.info('[INFO] Example 1 succesfully extracted');
+        attemptComplete(null);
+      });
+    } catch {
+      console.warn('[WARN] Dit not extract example');
+      attemptComplete(null);
+    }
+  });
+};
+
+export const aocInit = (argv: string[]) => {
   if (argv.length < 3) {
     rl.question(`Welke dag van ${generic.Settings.YEAR}? `, _doInit);
     return;
