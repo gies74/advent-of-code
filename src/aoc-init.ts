@@ -96,7 +96,7 @@ const _doInit = async (answer: string) => {
 const extractExample = async (html, localDataPath) => {
   return new Promise(attemptComplete => {
     try {
-      const example = html.split("your puzzle input")[1].split("</pre>")[0].split("<pre><code>")[1].split('</code>')[0];
+      const example = html.split("(your puzzle input)")[1].split("</pre>")[0].split("<pre><code>")[1].split('</code>')[0];
       fs.writeFile(`${localDataPath}/input_example1.txt`, example, () => {
         console.info('[INFO] Example 1 succesfully extracted');
         attemptComplete(null);
