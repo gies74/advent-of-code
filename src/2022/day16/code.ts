@@ -134,13 +134,31 @@ namespace day16 {
                 return neighbours;
             }
             this.roomX.adjValveRooms.forEach(avrX => {
+
+                // both agents move
                 this.roomY.adjValveRooms.forEach(avrY => {
                     neighbours.push(new SearchState(avrX, avrY, this.minutesLeft - 1, this.valveTimes.slice(0)));
                 });
+
+                // y cannot open a valve that is already open
                 if (!this.valveTimes.find(vt => vt.room === this.roomY)) {
+                    // x moves, y opens valve
                     neighbours.push(new SearchState(avrX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomY))));
                 }
             });
+
+            // x cannot open a valve that is already open
+            if (!this.valveTimes.find(vt => vt.room === this.roomX)) {
+
+                // x opens valve, y moves
+                this.roomY.adjValveRooms.forEach(avrY => {
+                    neighbours.push(new SearchState(this.roomX, avrY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX))));
+                });
+
+                // both agents open valve simultaneously
+                neighbours.push(new SearchState(this.roomX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX),new ValveTime(this.minutesLeft-1, this.roomY))));
+            }
+
             return neighbours;
         }
 
