@@ -1,7 +1,7 @@
 const fs = require("fs");
 
 export class Settings {
-    public static readonly YEAR = 2023;
+    public static readonly YEAR = 2022;
 }
 
 export enum Part {

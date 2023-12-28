@@ -139,5 +139,5 @@ namespace day16 {
         // set this switch to Part.Two once you've finished part one.
         Part.One,
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        0);
+        1);
 }

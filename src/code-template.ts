@@ -17,20 +17,8 @@ namespace day00 {
          * @returns sought answer of given puzzle part
          */
         (input: string[], part: Part, example: number = 0) => {
-            
-            // var chunks = Utils.splitInput(input);
-            let answerPart1 = 0;
-            let answerPart2 = 0;
 
-            if (part == Part.One) {
-
-                return answerPart1;
-
-            } else {
-
-                return answerPart2;
-
-            }
+            return 0;
 
         }, "year00", "day00", 
         // set this switch to Part.Two once you've finished part one.
