@@ -128,19 +128,42 @@ namespace day16 {
             this.valveTimes = valveTimes;
         }
 
-        get neighbours():SearchState[] {
+        calcNeighbours():SearchState[] {
             const neighbours = [];
             if (this.minutesLeft === 0) {
                 return neighbours;
             }
             this.roomX.adjValveRooms.forEach(avrX => {
+
+                // both agents move
                 this.roomY.adjValveRooms.forEach(avrY => {
                     neighbours.push(new SearchState(avrX, avrY, this.minutesLeft - 1, this.valveTimes.slice(0)));
                 });
+
+                // y cannot open a valve that is already open
                 if (!this.valveTimes.find(vt => vt.room === this.roomY)) {
+
+                    // x moves, y opens valve
                     neighbours.push(new SearchState(avrX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomY))));
                 }
             });
+
+            // x cannot open a valve that is already open
+            if (this.roomX.name !== this.roomY.name && !this.valveTimes.find(vt => vt.room === this.roomX)) {
+
+                // x opens valve, y moves
+                this.roomY.adjValveRooms.forEach(avrY => {
+                    neighbours.push(new SearchState(this.roomX, avrY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX))));
+                });
+
+                // y cannot open a valve that is already open
+                if (!this.valveTimes.find(vt => vt.room === this.roomY)) {
+
+                    // both agents open valve simultaneously
+                    neighbours.push(new SearchState(this.roomX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX),new ValveTime(this.minutesLeft-1, this.roomY))));
+                }
+            }
+
             return neighbours;
         }
 
@@ -153,7 +176,7 @@ namespace day16 {
         }
 
         toString() {
-            return `${this.roomX},${this.roomY} [${this.minutesLeft}] ::: ${this.evalGScore()}`
+            return `${this.roomX},${this.roomY} [${this.minutesLeft}] {${this.valveTimes.map(vt => vt.room.name + '(' + String(vt.minutesLeftOpened) + ')').join(',')}} ::: ${this.evalGScore()}`
         }
     }
 
@@ -176,7 +199,7 @@ namespace day16 {
             const current = openSet[currentIdx];
             openSet.splice(currentIdx, 1);
 
-            const neighbours= current.neighbours;
+            const neighbours= current.calcNeighbours();
             neighbours.forEach(neighbour => {
                 const tentativeScore = neighbour.evalGScore();
                 let n1=neighbour.roomX.name, n2=neighbour.roomY.name;
@@ -199,7 +222,7 @@ namespace day16 {
         return -1;
     }
 
-    const buildSolutionSpace = (dict) => {
+    const buildSolutionSpace = (dict, minutesLeft) => {
         const roomNames = Object.keys(dict);
         const space = {};
         let i, j, rni, rnj;
@@ -207,7 +230,7 @@ namespace day16 {
             const row = space[rni = roomNames[i]] = {};
             for (j = 0; j <= i; j++) {
                 const cell = row[rnj = roomNames[j]] = [] as SearchState[];
-                Array(26).fill(0).forEach((_, i) => cell.push(new SearchState(dict[rni], dict[rnj], i, [])));
+                Array(minutesLeft).fill(0).forEach((_, i) => cell.push(new SearchState(dict[rni], dict[rnj], i, [])));
             }
         }
         return space;
@@ -227,8 +250,12 @@ namespace day16 {
                 return dict["AA"].maximizeFlow(30, [], []);
             }
 
-            const space = buildSolutionSpace(dict);
-            return aStar(space["AA"]["AA"][25], space);
+            const minutesLeft = (example > 1) ? 4 : 26;
+
+            const space = buildSolutionSpace(dict, minutesLeft + 1);
+
+            // 2297 answer is too low
+            return aStar(space["AA"]["AA"][minutesLeft], space);
 
         }, "2022", "day16", 
         // set this switch to Part.Two once you've finished part one.
