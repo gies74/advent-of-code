@@ -4,8 +4,21 @@ const PIXEL_SCALING = 40;
 
 //#region Classes
 
-class Geometry {
+enum GaiaSymbol {
+    VBAR = 1,
+    FILLED_CIRCLE = 11
+}
 
+class SymbolInfo {
+    symbolType:GaiaSymbol = GaiaSymbol.FILLED_CIRCLE;
+    size=1;
+}
+
+class Geometry {
+    symbolSize:number=1;
+    clone(): Geometry {
+        return null;
+    }
 }
 
 class Point extends Geometry {
@@ -19,10 +32,13 @@ class Point extends Geometry {
     toString() {
         return `${this.x} ${this.y}`;
     }
+    clone(): Point {
+        return new Point(this.x, this.y);
+    }
 }
 
 class LineString extends Geometry {
-    points:Point[];
+    points: Point[];
     constructor(points) {
         super();
         this.points = points;
@@ -30,31 +46,33 @@ class LineString extends Geometry {
     toString() {
         return this.points[0].toString() + "  ## " + this.points.slice(1).reverse().map(pt => pt.toString()).join("  ");
     }
+    clone() {
+        return new LineString(this.points.map(p => p.clone()));
+    }
 }
 
-
 class GaiaSheet {
-    name:string;
+    name: string;
     no: number;
-    sheetObjects:SheetObject[] = [];
+    sheetObjects: SheetObject[] = [];
     constructor(name) {
         this.name = name;
         this.no = GaiaObject.newId("SHEET");
     }
 
-    registerObject(gaiaObj:GaiaObject, geometry:Geometry) {
+    registerObject(gaiaObj: GaiaObject, geometry: Geometry) {
         new SheetObject(gaiaObj, this, geometry);
     }
 }
 
 class GaiaFile {
-    sheets:{[name:string]:GaiaSheet} = {};
+    sheets: { [name: string]: GaiaSheet } = {};
 
-    constructor() {        
+    constructor() {
         GaiaObject.resetIdSequences();
     }
 
-    addSheet(name:string) {
+    addSheet(name: string) {
         this.sheets[name] = new GaiaSheet(name);
         return this.sheets[name];
     }
@@ -62,7 +80,7 @@ class GaiaFile {
     toString() {
         let contents = "G7.15\nNETWORK\n\n[OPTIONS]\nCurrency=€\n[]\n\n";
 
-        const sheetLines = Object.keys(this.sheets).map((shName,idx) => "#1 " + String(idx + 1) + " '" + shName + "' $00C0C0C0 0 0 0 0 0 0 0 0 0 0").join("\n");
+        const sheetLines = Object.keys(this.sheets).map((shName, idx) => "#1 " + String(idx + 1) + " '" + shName + "' $00C0C0C0 0 0 0 0 0 0 0 0 0 0").join("\n");
         contents += `[SHEET]\n${sheetLines}\n[]\n\n`;
 
         const gaiaObjects = [...new Set(Object.values(this.sheets).reduce((all, sheet) => all.concat(sheet.sheetObjects.map(so => so.gaiaObject)), [] as GaiaObject[]))];
@@ -80,7 +98,7 @@ class GaiaFile {
             kindObjs.forEach(ko => {
                 const tagLines = ko.tagLines
                     .replace("@ID", String(ko.id))
-                    .replace("@SHORTNAME", ko.shortname)                    
+                    .replace("@SHORTNAME", ko.shortname)
                     .replace("@LENGTH", String(ko.cableLength))
                     .replace("@NODEID1", String(ko.nodeid1))
                     .replace("@NODEID2", String(ko.nodeid2))
@@ -89,7 +107,8 @@ class GaiaFile {
                     .replace("@FUSETYPELONG", ko.fuseTypeLong)
                     .replace("@EDGESIDE", ko.fuseEdgeSide)
                     .replace("@FUSEKVOLTAGE", ko.fuseKVoltage)
-                    .replace("@HOMETAGLINES", ko.homeTagLines);
+                    .replace("@HOMETAGLINES", ko.homeTagLines)
+                    .replace("@LOADATTRS", ko.loadAttrs);
                 contents += tagLines;
                 const sheetTagLine = ko.sheetTagLine;
                 ko.sheetObjects.forEach(so => {
@@ -98,54 +117,50 @@ class GaiaFile {
                     contents += sheetTagLine
                         .replace("@SHEETNO", String(sheetNo))
                         .replace("@GEOMSTRING", geomString)
-                        .replace("@NODESHAPE", ko.nodeshape);
+                        .replace("@NODESHAPE", so.nodeshape);
                 });
             });
 
             contents += `[]\n\n`;
         });
         return contents;
-
     }
 }
 
 class SheetObject {
-    gaiaObject:GaiaObject;
+    gaiaObject: GaiaObject;
     gaiaSheet: GaiaSheet;
     geometry: Geometry;
-    constructor(go:GaiaObject, gs:GaiaSheet, geom:Geometry) {
+    symbol:SymbolInfo;
+    constructor(go: GaiaObject, gs: GaiaSheet, geom: Geometry) {
         this.gaiaObject = go;
         this.gaiaSheet = gs;
         this.geometry = geom;
+        this.symbol = new SymbolInfo();
 
         go.sheetObjects.push(this);
         gs.sheetObjects.push(this);
     }
-    // node    "tag9": { "bladnr": "1", "x": "0", "y": "0", "symbool": "11",                                   "kleur": "$000000FF", "grootte": "1", "dikte": "4", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "30", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0", "schuinetekst": "0", "usx": "8", "usy": "-8",                                                                                   "stsx": "-20", "stsy": "20",                           "nx": "05", "ny": "05"
-    // source  "tag9": { "bladnr": "2", "x": "0", "y": "0",                                                    "kleur": "$000000FF", "grootte": "1", "dikte": "4", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "08", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "007", "fsy": "-12",                                                                                     "sx": "00", "sy": "-85", "nx": "05", "ny": "05", "vo": "0"
-    // home    "tag9": { "bladnr": "3", "x": "0", "y": "0",                                                    "kleur": "$000000FF", "grootte": "5", "dikte": "1", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "30", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "006", "fsy": "-11",                                                                                     "sx": "49", "sy": "-98", "nx": "-5", "ny": "05", "vo": "0"
-    // load    "tag9": { "bladnr": "4", "x": "0", "y": "0",                                                    "kleur": "$00000000", "grootte": "1", "dikte": "1", "stijl": "0", "tekstkleur": "$00008000", "tekstgrootte": "08", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "012", "fsy": "006",                                                                                     "sx": "00", "sy": "000", "nx": "-5", "ny": "-5", "vo": "0"
-    // trafo   "tag9": { "bladnr": "2",                                                                        "kleur": "$000000FF", "grootte": "1", "dikte": "1", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "08", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "012", "fsy": "06", "ssx": "-15", "ssy": "006", "msx": "00", "msy": "-24", "stsx": "-20", "stsy": "20",                           "nx": "05", "ny": "00",           "vo1": "0", "vo2": "0", "#": "#", "coordinates": ""
-    // link    "tag9": { "bladnr": "2",                                                                        "kleur": "$000000FF", "grootte": "1", "dikte": "1", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "08", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "-15", "fsy": "06", "ssx": "-15", "ssy": "006", "msx": "04", "msy": "000", "stsx": "-20", "stsy": "20",                           "nx": "00", "ny": "05",           "vo1": "0", "vo2": "0", "#": "#", "coordinates": " 500 0 550 0 ## 550 150 500 150"
-    // cable   "tag9": { "bladnr": "1",                                                                        "kleur": "$000000FF", "grootte": "5", "dikte": "1", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "30", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                               "fsx": "007", "fsy": "12", "ssx": "-07", "ssy": "-12", "msx": "24", "msy": "000", "stsx": "-20", "stsy": "20",                           "nx": "05", "ny": "00",           "vo1": "0", "vo2": "0", "#": "#", "coordinates": ""
-    // fuse    "tag9": { "bladnr": "2",                                      "afstand": "0", "overzijde": "0", "kleur": "$000000FF", "grootte": "1", "dikte": "1", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "08", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0",                                                                                                                                                              "sx": "12", "sy": "-10",  "nx": "00", "ny": "00"
-
-
+    get nodeshape() {
+        return `${this.symbol.symbolType} $000000FF ${this.symbol.size}`;        
+    }
 }
 
-
 class GaiaObject {
-    sheetObjects:SheetObject[] = [];
-    id:number;
-    static objectKind = "OBJECT";
-    static idSequence:{[name:string]:number} = {};
+    sheetObjects: SheetObject[] = [];
+    id: number;
+    static idSequence: { [name: string]: number } = {};
     static lookups = {
         "objectKind": "OBJECT",
         "tagLines": "#"
     }
 
-    getNetwerkGeometry():Geometry {
-        return this.sheetObjects.find(so => so.gaiaSheet.name === "NETWERK").geometry as Geometry;
+    getSheetGeometry(sheet:GaiaSheet): Geometry {
+        return this.sheetObjects.find(so => so.gaiaSheet === sheet).geometry as Geometry;
+    }
+
+    getSheetSymbol(sheet:GaiaSheet): SymbolInfo {
+        return this.sheetObjects.find(so => so.gaiaSheet === sheet).symbol;
     }
 
     constructor() {
@@ -166,10 +181,6 @@ class GaiaObject {
 
     get sheetTagLine() {
         return this._staticLookup["sheetTagLine"];
-    }
-
-    get nodeshape() {
-        return "11 $000000FF 1";
     }
 
     get shortname() {
@@ -212,8 +223,12 @@ class GaiaObject {
         return "";
     }
 
+    get loadAttrs() {
+        return "";
+    }
+
     get _staticLookup() {
-        return (<typeof GaiaObject | typeof GaiaNode | typeof Cable | typeof Transformer | typeof HomeNode >this.constructor).lookups;
+        return (<typeof GaiaObject | typeof GaiaNode | typeof Cable | typeof Transformer | typeof HomeNode>this.constructor).lookups;
     }
 
     static newId(kind) {
@@ -229,85 +244,104 @@ class GaiaObject {
 
 }
 
-class GaiaNode extends GaiaObject {    
-    static objectKind = "NODE";
-    // node    "tag9": { "bladnr": "1", "x": "0", "y": "0", "symbool": "11",                                   "kleur": "$000000FF", "grootte": "1", "dikte": "4", "stijl": "0", "tekstkleur": "$00000000", "tekstgrootte": "30", "lettertype": "'Arial'", "tekststijl": "0", "geentekst": "0", "opdekop": "0", "schuinetekst": "0", "usx": "8", "usy": "-8",                                                                                   "stsx": "-20", "stsy": "20",                           "nx": "05", "ny": "05"
+class GaiaNode extends GaiaObject {
     static lookups = {
         "objectKind": "NODE",
-        "tagLines": 
+        "tagLines":
             "#1 @ID 45297,5251 '@SHORTNAME' '' '' @KVOLTAGE 1 '' 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
         "sheetTagLine":
             "#9 @SHEETNO @GEOMSTRING @NODESHAPE 4 0 $00000000 10 'Arial' 0 0 0 0 15 -15 -20 20 5 5\n"
     }
 
-    edges:GaiaEdge[] = [];
-    pointGeometry:Point;    
-    x:number;
-    y:number;
-    nodeObject:GaiaObject = null;
+    edges: GaiaEdge[] = [];
+    pointGeometry: Point;
+    x: number;
+    y: number;
+    nodeObject: GaiaObject = null;
     constructor() {
         super();
     }
 
-    computeLocNetwerk(netwerkSheet:GaiaSheet, x:number, y:number, fromEdge:GaiaEdge) {
+    computeLocNetwerk(sheet: GaiaSheet, x: number, y: number, fromEdge: GaiaEdge, withinApartment:boolean = false) {
+
+        const forNetwerk = sheet.name === "NETWERK";
+        const forMSR:boolean = sheet.name === "MSR";
+        const forAptmt = sheet.name === "APPARTEMENTEN";
 
         const myGeometry = new Point(x, y);
-        if (fromEdge) {
+
+        if (fromEdge && (forMSR || forNetwerk && !(fromEdge instanceof Transformer) || withinApartment)) {
             const linePoints = [];
             const feederNode = fromEdge.getOpposNode(this);
-            const feederGeometry = feederNode.getNetwerkGeometry() as Point;
+            const feederGeometry = feederNode.getSheetGeometry(sheet) as Point;
             if (!(feederNode instanceof RailNode)) {
                 linePoints.push(new Point(feederGeometry.x, feederGeometry.y));
             }
             linePoints.push(new Point(feederGeometry.x, myGeometry.y));
-            linePoints.push(new Point(myGeometry.x, myGeometry.y));
+            linePoints.push(myGeometry.clone());
 
             const edgeGeometry = new LineString(linePoints);
-            netwerkSheet.registerObject(fromEdge, edgeGeometry);
+            sheet.registerObject(fromEdge, edgeGeometry);
+            const parallelEdge = this.edges.filter(e => e !== fromEdge).find(e => e.n1 === fromEdge.n1 && e.n2 === fromEdge.n2);
+            if (parallelEdge) {
+                const pEdgeGeometry = edgeGeometry.clone();
+                const s = pEdgeGeometry.points[0];
+                const e = pEdgeGeometry.points[pEdgeGeometry.points.length - 1];
+                pEdgeGeometry.points.splice(1, 0, new Point(s.x + PIXEL_SCALING, s.y - PIXEL_SCALING), new Point(e.x - PIXEL_SCALING, e.y - PIXEL_SCALING));
+                sheet.registerObject(parallelEdge, pEdgeGeometry);
+            }
+
             fromEdge.fuses.forEach(fuse => {
-                netwerkSheet.registerObject(fuse, new Point(0,0));
+                sheet.registerObject(fuse, new Point(0, 0));
             });
         }
-        netwerkSheet.registerObject(this, myGeometry);
-        if ([HomeNode, LoadNode, SourceNode].find(t => this instanceof t)) {
-            const nodeObjGeom = new Point(x + 25, y - 25);
-            netwerkSheet.registerObject((this as GaiaNode).nodeObject, nodeObjGeom);
+
+        if (!forAptmt || this instanceof FlatkastAMNode || withinApartment) {
+            sheet.registerObject(this, myGeometry);
+            if (!forMSR && [HomeNode, LoadNode].find(t => this instanceof t) || this instanceof SourceNode) {
+                const nodeObjGeom = new Point(x + 25, y - 25);
+                sheet.registerObject((this as GaiaNode).nodeObject, nodeObjGeom);
+            }
         }
 
         const oppSegs = this.getOpposCables(fromEdge);
-        if (oppSegs.length === 0) {
+        
+        if ((forNetwerk || withinApartment) && oppSegs.length === 0 || forNetwerk && this instanceof FlatkastAMNode || forMSR && fromEdge && fromEdge.n1 instanceof RailNode) {
             return 1;
         }
 
         let dy = 0;
         oppSegs.forEach(s => {
-            const length = s instanceof Cable ? (s as Cable).length : 10;
-            dy += s.getOpposNode(this).computeLocNetwerk(netwerkSheet, x + PIXEL_SCALING * length, y + PIXEL_SCALING * 4 * dy, s);
+            const length = forMSR || s instanceof Transformer ? 10 : s instanceof Link ? 4 : (s as Cable).length;
+            dy += s.getOpposNode(this).computeLocNetwerk(sheet, x + PIXEL_SCALING * length, y + PIXEL_SCALING * 4 * dy, s,  withinApartment || s.n2 instanceof FlatkastNode);
         }, this);
 
         return dy;
     }
 
-    getOpposCables(cab:GaiaEdge = null) {
-        return this.edges.filter(s => s !== cab);
+    getOpposCables(cab: GaiaEdge = null) {
+        const edges = this.edges.filter(s => s !== cab);
+        if (edges.length == 2 && edges[0].n2 === edges[1].n2) {
+            edges.splice(1, 1);
+        }
+        if (cab) {
+            const returnIdx = edges.findIndex(edge => cab.n1 === edge.n1);
+            if (returnIdx !== -1) {
+                edges.splice(returnIdx, 1);
+            }
+        }
+        return edges;
     }
-    
 }
 
 class RailNode extends GaiaNode {
-    size:number = 1;
-
-    get nodeshape() {
-        return `1 $000000FF ${this.size}`;
-    }
 
 }
-
 
 class SourceNode extends GaiaNode {
     static lookups = {
         "objectKind": "NODE",
-        "tagLines": 
+        "tagLines":
             "#1 @ID 45297,5251 '' '' '' @KVOLTAGE 1 '' 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
         "sheetTagLine":
             "#9 @SHEETNO @GEOMSTRING 11 $000000FF 1 4 0 $00000000 10 'Arial' 0 0 0 0 0 -110 -20 20 5 5\n",
@@ -318,13 +352,12 @@ class SourceNode extends GaiaNode {
         super();
         this.nodeObject = new Source(this);
     }
-
 }
 
 class LoadNode extends GaiaNode {
-    constructor() {
+    constructor(aansluitwaarde: number = 250) {
         super();
-        this.nodeObject = new Load(this);
+        this.nodeObject = new Load(this, aansluitwaarde);
     }
 }
 
@@ -335,28 +368,107 @@ class HomeNode extends GaiaNode {
     }
 }
 
+interface IReconstructable {
+    parameters: any[];
+    reconstruct(): void;
+}
+
+class FlatkastAMNode extends GaiaNode implements IReconstructable {
+    parameters: any[] = [];
+
+    reconstruct() {
+        const nApartments = this.parameters[0] as number;
+        const nStories = this.parameters[1] as number;
+        const feedCable = new Cable(this, 10);
+        const flatKast = new FlatkastNode();
+        feedCable.n2 = flatKast;
+        flatKast.edges.push(feedCable);
+
+        const nStijgleidingen = Math.ceil(nApartments / nStories);
+
+        for (var iStijgleiding = 0; iStijgleiding < nStijgleidingen; iStijgleiding++) {
+            let prevNode = flatKast;
+            for (var iApartment = iStijgleiding * nStories; iApartment < Math.min(nApartments, (iStijgleiding + 1) * nStories); iApartment++) {
+                const cable = new Cable(prevNode, 3);
+                const apartment = new HomeNode('A');
+                cable.n2 = apartment;
+                apartment.edges.push(cable);
+                if (prevNode === flatKast) {
+                    new Fuse(cable, flatKast, "0,4", "gG 80 A");
+                }
+                prevNode = apartment;
+            }
+        }
+
+    }
+
+}
+
+class FlatkastNode extends GaiaNode {
+
+}
+
+class GVNode extends LoadNode implements IReconstructable {
+    parameters: any[] = [];
+    reconstruct() {
+        const nAansluitwaarde = this.parameters[0] as number;
+        const numKabels = this.parameters[1] as number;
+        if (this.edges.length !== 1 || !(this.edges[0].n1 instanceof RailNode) || ![160, 250].includes(nAansluitwaarde) || ![1, 2].includes(numKabels)) {
+            throw "GV must be first and only node after LS rek";
+        }
+        (this.nodeObject as Load).aansluitWaarde = nAansluitwaarde;
+        const feedCable = this.edges[0];
+        if (numKabels == 2) {
+            const link = new Link(feedCable.n1);
+            const splitter = new RailNode();
+            link.n2 = splitter;
+            splitter.edges.push(link);
+            const fi = link.n1.edges.indexOf(feedCable);
+            link.n1.edges.splice(fi, 1);
+
+            feedCable.fuses.splice(0, feedCable.fuses.length);
+            feedCable.n1 = splitter;
+            splitter.edges.push(feedCable);
+            const secondCable = new Cable(splitter, feedCable.cableLength);
+            secondCable.n2 = this;
+            this.edges.push(secondCable);
+        }
+
+        const infeedLink = new Link(this);
+        const infeedNode = new LoadNode(nAansluitwaarde);
+        infeedLink.n2 = infeedNode;
+        infeedNode.edges.push(infeedLink);
+
+        infeedNode.nodeObject = new Load(infeedNode, -1 * nAansluitwaarde);
+    }
+}
+
+class KVNode extends GaiaNode implements IReconstructable {
+    parameters: any[] = [];
+    reconstruct() { }
+}
+
+
 class EMof extends GaiaNode {
-    
+
     get shortname() {
         return "EM";
     }
-
 }
 
 class AMof extends GaiaNode {
-    
+
     get shortname() {
         return "AM";
     }
-
 }
 
 class GaiaEdge extends GaiaObject {
-    n1:GaiaNode;
-    n2:GaiaNode;
-    fuses:Fuse[] = [];
+    n1: GaiaNode;
+    n2: GaiaNode;
+    fuses: Fuse[] = [];
 
-    constructor(n1:GaiaNode) {
+    constructor(n1: GaiaNode) {
         super();
         this.n1 = n1;
         n1.edges.push(this);
@@ -377,18 +489,16 @@ class GaiaEdge extends GaiaObject {
         return this.id;
     }
 
-    getOpposNode(n:GaiaNode) {
+    getOpposNode(n: GaiaNode) {
         return n === this.n1 ? this.n2 : this.n1;
     }
-    
 }
 
 class Transformer extends GaiaEdge {
-    static objectKind = "TRANSFORMER";
     static lookups = {
         "objectKind": "TRANSFORMER",
-        "tagLines": 
-            "#1 @ID 45297,5262 @NODEID1 @NODEID2 '' 1 1 1 1 1 1 1 1 1 1 '' '' 0 'Norm 630 kVA (5)' 1 1 2 3 0 0 2  0 0,398 0 0 0 0 1 -100 0,398 100 0,398\n" + 
+        "tagLines":
+            "#1 @ID 45297,5262 @NODEID1 @NODEID2 '' 1 1 1 1 1 1 1 1 1 1 '' '' 0 'Norm 630 kVA (5)' 1 1 2 3 0 0 2  0 0,398 0 0 0 0 1 -100 0,398 100 0,398\n" +
             "#2 '630 kVA' 0,63 10,75 0,42 4 5,2 0,745 17,321 0,0019 0,011 21,6 D YN 5 1 0,25 5 3 1 0 0 0\n",
         "sheetTagLine":
             "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 24  -20 20  0 5  0 0 # @GEOMSTRING\n"
@@ -396,54 +506,53 @@ class Transformer extends GaiaEdge {
 }
 
 class Link extends GaiaEdge {
-    static objectKind = "LINK";
     static lookups = {
         "objectKind": "LINK",
-        "tagLines": 
-            "#1 @ID 45297,5251 'MV' '' '' 10,5 1 '' 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n" + 
-            "#9 @SHEETNO @GEOMSTRING 1 $000000FF 10 4 0 $00000000 10 'Arial' 0 0 0 0 0 -110 -20 20 5 5\n",
+        "tagLines":
+            "#1 @ID 0 @NODEID1 @NODEID2 '' 1 1 1 1 1 1 1 1 1 1 '' '' 0 1 1 1 1 1 1 1 1 \n",
         "sheetTagLine":
-                "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 24  -20 20  0 5  0 0 # @GEOMSTRING\n"
+            "#9 @SHEETNO $000000FF 1 1 0  $00000000 8 'Arial' 0 0 0 -15 6  -15 6  4 0  -20 20  0 5  0 0 # @GEOMSTRING\n"
     }
 
 }
 
 class Cable extends GaiaEdge {
-    static objectKind = "CABLE";
     static lookups = {
         "objectKind": "CABLE",
-        "tagLines": 
+        "tagLines":
             "#1 @ID 45297,528 @NODEID1 @NODEID2 '' 1 1 1 1 1 1 1 1 1 1 '' '' 0,025 0 0 0 1000 0 1 2 3 4 5 6 7 8 9 1 2 3 4 5 6 7 8 9 1 1 1 1 1 1 1 1 '' '' '' '' \n" +
             "#2 @LENGTH '4*150 VVMvKhsas50/Alk 4*6' \n" +
             "#3 '150 Al; 6' 0,75 0 0,72 0,43 225 0,5 290 0,75 260 1 240 8,5 20 55 160 50 0,25692 0,79626 0,0517 0,72746 0,0496 0,70572 0,39761 0,69944 0,05103 0,70029 2,9485 0,89397 0,05386 0,7488 0,04866 0,698 0,04937 0,70422 0,04678 0,68292 0,05103 0,70026 200 6 52 1,05 1 \n",
         "sheetTagLine":
             "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 4  -20 20  5 0  0 0 # @GEOMSTRING\n"
     }
-    length:number = 0;
+    length: number;
+    constructor(n: GaiaNode, length: number = 0) {
+        super(n);
+        this.length = length;
+    }
 
     get cableLength() {
         return this.length;
     }
-
 }
 
 class Fuse extends GaiaObject {
-    static objectKind = "FUSE";
     static lookups = {
         "objectKind": "FUSE",
-        "tagLines": 
+        "tagLines":
             "#1 @ID 45297,5264 ''       @EDGESIDE 1 '@FUSETYPELONG' \n",
         "sheetTagLine":
             "#9 @SHEETNO 0 0 $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 -6  0 0\n"
     }
-    edge:GaiaEdge;
-    node:GaiaNode;
-    _kVoltage:string;
-    _fuseTypeLong:string;
+    edge: GaiaEdge;
+    node: GaiaNode;
+    _kVoltage: string;
+    _fuseTypeLong: string;
     constructor(edge, node, kVoltage, fuseTypeLong) {
         super();
         this.edge = edge;
-        this.node = node;        
+        this.node = node;
         this.edge.fuses.push(this);
         this._kVoltage = kVoltage;
         this._fuseTypeLong = fuseTypeLong;
@@ -454,7 +563,7 @@ class Fuse extends GaiaObject {
     }
 
     get fuseEdgeSide() {
-        const prefix = this.edge instanceof Transformer ? "T" : this.edge instanceof Cable ? "K" : "L";
+        const prefix = this.edge instanceof Transformer ? "T" : this.edge instanceof Cable ? "K" : "I";
         const side = this.edge.n1 === this.node ? 1 : 2;
         return `${prefix}${this.edge.id} ${side}`;
     }
@@ -465,19 +574,17 @@ class Fuse extends GaiaObject {
 }
 
 class Frame extends GaiaObject {
-    static objectKind = "FRAME";
     static lookups = {
         "objectKind": "FRAME",
-        "tagLines": 
+        "tagLines":
             "#1 @ID 45297,5251 'MV' '' '' 10,5 1 '' 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
         "sheetTagLine":
             "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 24  -20 20  0 5  0 0 # @GEOMSTRING\n"
     }
-    
 }
 
 class GaiaNodeObject extends GaiaObject {
-    node:GaiaNode;
+    node: GaiaNode;
     constructor(node) {
         super();
         this.node = node;
@@ -489,14 +596,13 @@ class GaiaNodeObject extends GaiaObject {
 }
 
 class Home extends GaiaNodeObject {
-    static objectKind = "HOME";
     static lookups = {
         "objectKind": "HOME",
-        "tagLines": 
-            "#1 @NODEID @ID 45297,5286 '' 1 1 1 1 '' 1 1 2 3 12 '4*  6 Cu Aansluitk' '' 1 1 0 10 1 'Automaat c25' '' 4 0 '' 0 0 0 0 '' '' '' \n" + 
-            "#2 '6Cu+6' 0,75 0 0,2 0,139 43 0,5 61 0,75 58 1 56 0,8 20 90 160 50 3,12935 0,85632 0,04935 0,76295 0,04935 0,74112 3,12935 0,72974 0,043803 0,73175 0 0 0 0 0 0 0 0 0 0 0 0 21 1,7 0 0 1 \n" + 
-            "#3 'Caut 25 A' 0,5 25 39 1000 42 500 48 200 56 100 70 50 110 20 193 10 250 5 250 2 250 1 250 0,5 250 0,2 250 0,1 265 0,05 635 0,02 12500 0,01 \n" + 
-            "@HOMETAGLINES" + 
+        "tagLines":
+            "#1 @NODEID @ID 45297,5286 '' 1 1 1 1 '' 1 1 2 3 12 '4*  6 Cu Aansluitk' '' 1 1 0 10 1 'Automaat c25' '' 4 0 '' 0 0 0 0 '' '' '' \n" +
+            "#2 '6Cu+6' 0,75 0 0,2 0,139 43 0,5 61 0,75 58 1 56 0,8 20 90 160 50 3,12935 0,85632 0,04935 0,76295 0,04935 0,74112 3,12935 0,72974 0,043803 0,73175 0 0 0 0 0 0 0 0 0 0 0 0 21 1,7 0 0 1 \n" +
+            "#3 'Caut 25 A' 0,5 25 39 1000 42 500 48 200 56 100 70 50 110 20 193 10 250 5 250 2 250 1 250 0,5 250 0,2 250 0,1 265 0,05 635 0,02 12500 0,01 \n" +
+            "@HOMETAGLINES" +
             "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
         "homeTagLines": {
             "V":
@@ -511,51 +617,68 @@ class Home extends GaiaNodeObject {
                 "#16 1 2 3 175 0,9 0  \n" +
                 "#27 0 0 1246  \n" +
                 "#18 1000 0 0,0058 180 30 0 180 30 0 180 30 0,0058 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
-            "H": 
+            "H":
                 "#12 1 0 0 0 'SA hoekwoning'  \n" +
                 "#13 0,9 3300 0,2532 0,0335 0 0 0 0  \n" +
                 "#16 1 2 2 150 0,9 0  \n" +
                 "#27 0 0 854  \n" +
                 "#18 1000 0 0,0048 180 30 0 180 30 0 180 30 0,0048 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
-            "T": 
+            "T":
                 "#12 1 0 0 0 'SA tussenwoning'  \n" +
                 "#13 0,9 3200 0,2532 0,0335 0 0 0 0  \n" +
                 "#16 1 2 1 125 0,9 0  \n" +
                 "#27 0 0 770  \n" +
                 "#18 1000 0 0,0044 180 30 0 180 30 0 180 30 0,0044 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
-        },                            
+            "A":
+                "#12 1 0 0 0 'SA appartement' \n" +
+                "#13 0,9 2300 0,2532 0,0335 0 0 0 0 \n" +
+                "#16 1 2 5 100 0,9 0 \n" +
+                "#27 0 0 280 \n" +
+                "#18 1000 0 0,0012 180 30 0 180 30 0 180 30 0,0012 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0 \n",
+        },
         "sheetTagLine":
             "#9 @SHEETNO @GEOMSTRING $000000FF 1 1 0 $00000000 10 'Arial' 0 0 0 7 -12  0 25  5 5  0\n",
     };
-    homeKind:string;
+    homeKind: string;
     constructor(node, homeKind) {
         super(node);
         this.homeKind = homeKind;
     }
     get homeTagLines() {
         return this._staticLookup["homeTagLines"][this.homeKind];
-    }    
-
-
+    }
 }
 
 class Load extends GaiaNodeObject {
-    static objectKind = "LOAD";
+    aansluitWaarde: number;
     static lookups = {
         "objectKind": "LOAD",
-        "tagLines": 
-            "#1 @ID 45297,5251 'MV' '' '' 10,5 1 '' 0 0 0 0 0 0 0 0 0 0 0 0 0 0\n",
+        "tagLines":
+            "#1 @NODEID 1 0 @LOADATTRS 0 0 0 0 0 0 0 0 0 '' 0 0 \n",
         "sheetTagLine":
-            "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 24  -20 20  0 5  0 0 # @GEOMSTRING\n"
+            "#9 @SHEETNO @GEOMSTRING $00000000 1 1 0 $00008000 8 'Arial' 0 0 0 12 6  145 0  -5 -5  0\n"
     }
+    constructor(n: GaiaNode, aansluitWaarde: number) {
+        super(n);
+        this.aansluitWaarde = aansluitWaarde;
+    }
+    get loadAttrs() {
+        let loadType = (this.aansluitWaarde > 0) ? "BELASTING" : "OPWEK";
+        const PQvals = {
+            "160": "0,028 0,01735 0,028 0,01735 0,028 0,01735",
+            "-160": "-0,03334 0 -0,03334 0 -0,03334 0",
+            "250": "0,04534 0,02809921 0,04534 0,02809921 0,04534 0,02809921",
+            "-250": "-0,05334 0 -0,05334 0 -0,05334 0"
+        }[String(this.aansluitWaarde)];
 
+        return `'${loadType}' 1 1 1 1 '' ${PQvals}`;
+    }
 }
 
 class Source extends GaiaNodeObject {
-    static objectKind = "SOURCE";
     static lookups = {
         "objectKind": "SOURCE",
-        "tagLines": 
+        "tagLines":
             "#1 @NODEID @ID 45297,5266 '' 1 1 1 0 '' 10,025 10,975 10,5 75 0 0\n",
         "sheetTagLine":
             "#9 @SHEETNO @GEOMSTRING $000000FF 1 1 0 $00000000 10 'Arial' 0 0 0 -15 6  -125 0  5 5  0\n"
@@ -564,9 +687,9 @@ class Source extends GaiaNodeObject {
 
 
 class Kabel {
-    verbinding:Verbinding;
-    start:GaiaNode;        
-    constructor(start:GaiaNode, verbinding:Verbinding) {
+    verbinding: Verbinding;
+    start: GaiaNode;
+    constructor(start: GaiaNode, verbinding: Verbinding) {
         this.verbinding = verbinding;
         verbinding.kabels.push(this);
         this.start = start;
@@ -575,19 +698,18 @@ class Kabel {
 
 
 class Verbinding {
-    avp:AVP;
+    avp: AVP;
     kabels = [];
     moffen = [];
-    constructor(avp:AVP) {
+    constructor(avp: AVP) {
         this.avp = avp;
         avp.verbindingen.push(this);
-
     }
 }
 
 class AVP {
     verbindingen = [];
-    trafo:Transformer;
+    trafo: Transformer;
     constructor() {
         const ms = new SourceNode();
         const rail = new RailNode();
@@ -599,20 +721,34 @@ class AVP {
         new Fuse(this.trafo, rail, "0,4", "PATR Trafo 630 kVA L");
     }
 
-    computeNetwerkPresentation(netwerkSheet:GaiaSheet) {
-        const depth = this.ms.computeLocNetwerk(netwerkSheet, 0, 0, null);
-        const railGeom = this.rail.getNetwerkGeometry() as Point;
+    computePresentation(sheet: GaiaSheet) {
+
+        const forMSR:boolean=sheet.name === "MSR";
+        const forAptmt = sheet.name === "APPARTEMENTEN";
+
+        const startNode = forMSR ? this.ms : this.rail;
+        const startEdge = forMSR ? null : this.trafo;
+        const depth = startNode.computeLocNetwerk(sheet, 0, 0, startEdge);
+
+        if (forAptmt) {
+            return;
+        }
+
+        const railGeom = this.rail.getSheetGeometry(sheet) as Point;
         railGeom.y = (depth - 1) * 2 * PIXEL_SCALING;  // 160
-        this.rail.size = 2 + (depth - 1) * 8;  // 2 + 2 * 10 = 18
+        const railSymbol = this.rail.getSheetSymbol(sheet);
+        railSymbol.size = 2 + (depth - 1) * 8;  // 2 + 2 * 10 = 18
+        railSymbol.symbolType = GaiaSymbol.VBAR;
 
-        const sourceNodeGeom = this.ms.getNetwerkGeometry() as Point;
-        sourceNodeGeom.y = railGeom.y;
-        const sourceGeom = this.ms.nodeObject.getNetwerkGeometry() as Point;
-        sourceGeom.x = sourceNodeGeom.x - 20;
-        sourceGeom.y = sourceNodeGeom.y;
-
-
-        (this.trafo.getNetwerkGeometry() as LineString).points = [sourceNodeGeom, railGeom];
+        if (forMSR)
+        {
+            const sourceNodeGeom = this.ms.getSheetGeometry(sheet) as Point;
+            sourceNodeGeom.y = railGeom.y;
+            const sourceGeom = this.ms.nodeObject.getSheetGeometry(sheet) as Point;
+            sourceGeom.x = sourceNodeGeom.x - 20;
+            sourceGeom.y = sourceNodeGeom.y;
+            (this.trafo.getSheetGeometry(sheet) as LineString).points = [sourceNodeGeom, railGeom];
+        }
     }
 
     get rail() {
@@ -622,21 +758,47 @@ class AVP {
     get ms() {
         return this.trafo.n1 as SourceNode;
     }
-
 }
 
 class GaiaLocation {
-    x:number = 0;
-    y:number = 0;
+    x: number = 0;
+    y: number = 0;
 }
 //#endregion
 
 //#region Parsers
-const parseKabel = (line:string[], node:GaiaNode, verbinding:Verbinding) => {        
+
+const parseParams = (line: string[], object: IReconstructable) => {
+    let c;
+    let number = 0;
+    let parsingNumber = false;
+    while (c = line.shift()) {
+        if (/\d/.test(c)) {
+            parsingNumber = true;
+            number = number * 10 + parseInt(c);
+        } else {
+            if (parsingNumber) {
+                object.parameters.push(number);
+            }
+            parsingNumber = false;
+            number = 0;
+            if (/;/.test(c)) {
+                continue;
+            } else if (!/\}/.test(c)) {
+                object.parameters.push(c);
+            } else {
+                return;
+            }
+        }
+    }
+};
+
+const parseKabel = (line: string[], node: GaiaNode, verbinding: Verbinding) => {
     let c;
     const kabel = new Kabel(node, verbinding);
     let segment = new Cable(node);
     let m = new AMof();
+    let gvVerbinding = false;
     while (c = line.shift()) {
         if (/\d/.test(c)) {
             segment.length = 10 * segment.length + parseInt(c);
@@ -645,14 +807,28 @@ const parseKabel = (line:string[], node:GaiaNode, verbinding:Verbinding) => {
             segment.n2 = h;
             h.edges.push(segment);
             segment = new Cable(h);
+        } else if (/[FKG]/.test(c)) {
+            const flg = { "F": new FlatkastAMNode(), "K": new KVNode(), "G": new GVNode() }[c];
+            segment.n2 = flg;
+            flg.edges.push(segment);
+            if (line.shift() !== "{") {
+                throw "(F)latkast, (K)V and (G)V must be followed by parameters";
+            };
+            parseParams(line, flg);
+            flg.reconstruct();
+            gvVerbinding = c === "G";
+            if (gvVerbinding) {
+                continue;
+            }
+            segment = new Cable(flg);
         } else if (c === "(") {
-            if (!segment.n2) {              
+            if (!segment.n2) {
                 segment.n2 = m;
                 m.edges.push(segment);
             }
             parseKabel(line, m, verbinding);
         } else if (c === ")") {
-            if (m.edges.length >= 2)
+            if (m.edges.length >= 2 || gvVerbinding)
                 return;
             m = new EMof();
             segment.n2 = m;
@@ -664,7 +840,7 @@ const parseKabel = (line:string[], node:GaiaNode, verbinding:Verbinding) => {
     }
 };
 
-const parseVerbinding = (line, avp:AVP) => {
+const parseVerbinding = (line, avp: AVP) => {
     let c;
     const verbinding = new Verbinding(avp);
     parseKabel(line, verbinding.avp.trafo.n2, verbinding);
@@ -676,12 +852,12 @@ const parseAVP = (line) => {
     while (c = line.shift()) {
         switch (c) {
             case "(":
-                parseVerbinding(line, avp);          
+                parseVerbinding(line, avp);
             case ")":
                 continue;
             default:
                 throw "Error AVP";
-            }
+        }
     }
 
     return avp;
@@ -690,40 +866,41 @@ const parseAVP = (line) => {
 
 const writeToFile = async (text, localDataPath) => {
     return new Promise(attemptComplete => {
-      try {
-        fs.writeFile(localDataPath, text, () => {
-          console.info('[INFO] Example 1 succesfully extracted');
-          attemptComplete(null);
-        });
-      } catch {
-        console.warn('[WARN] Dit not extract example');
-        attemptComplete(null);
-      }
+        try {
+            fs.writeFile(localDataPath, text, () => {
+                console.info('[INFO] File write succesful');
+                attemptComplete(null);
+            });
+        } catch {
+            console.warn('[WARN] File write failed');
+            attemptComplete(null);
+        }
     });
-  };
-
-
-
+};
 
 const configs = [
-    "(200V1)(200W1)(200H1)(200T1)"
-    , "(50(50(50(45(5V5V5V5V5V1)(5V5V5V5V5V1)(5V5V5V5V5V1)))))(50(50(50(45(5W5W5W5W5W1)(5W5W5W5W5W1)(5W5W5W5W5W1)))))(50(50(50(45(5H5H5H5H5H1)(5H5H5H5H5H1)(5H5H5H5H5H1)))))(50(50(50(45(5T5T5T5T5T1)(5T5T5T5T5T1)(5T5T5T5T5T1)))))"
+    "(30G{160;1})(30G{250;2})(10(10(5(5V5V5V5V5V1))))(10(10(5(5W5W5W5W5W1))))(10(10(5(5H5T5T5T5H1)(5H5T5T5T5H1))))(10(10(5(5F{13;3}1))))"
+    //, "(50(50(50(45(5V5V5V5V5V1)))))(50(50(50(45(5W5W5W5W5W1)))))(50(50(50(45(5H5T5T5T5H1)(5H5T5T5T5H1)))))"
     //, "(5V1)(5W1)(5H1)(5T1)"
     // , "(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))"
     // , "(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)"
 ]
 configs.forEach(async config => {
 
-    const file = new GaiaFile();
-    const netwerkSheet = file.addSheet("NETWERK");
     const avp = parseAVP(config.split(''));
-    avp.computeNetwerkPresentation(netwerkSheet);
+
+    const file = new GaiaFile();
+
+    const netwerkSheet = file.addSheet("NETWERK");
+    avp.computePresentation(netwerkSheet);
+
+    const msrSheet = file.addSheet("MSR");
+    avp.computePresentation(msrSheet);
+
+    const apartmentSheet = file.addSheet("APPARTEMENTEN");
+    avp.computePresentation(apartmentSheet);
 
     const fileContents = file.toString();
     await writeToFile(fileContents, `./data/${config}.gnf`);
 });
 const x = 2;
-
-
-
-
