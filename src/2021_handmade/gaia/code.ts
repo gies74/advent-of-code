@@ -267,6 +267,10 @@ class GaiaNode extends GaiaObject {
         const forNetwerk = sheet.name === "NETWERK";
         const forMSR:boolean = sheet.name === "MSR";
         const forAptmt = sheet.name === "APPARTEMENTEN";
+        
+        if (forAptmt && this instanceof FlatkastAMNode) {
+            x = 0;
+        }
 
         const myGeometry = new Point(x, y);
 
@@ -306,14 +310,19 @@ class GaiaNode extends GaiaObject {
 
         const oppSegs = this.getOpposCables(fromEdge);
         
-        if ((forNetwerk || withinApartment) && oppSegs.length === 0 || forNetwerk && this instanceof FlatkastAMNode || forMSR && fromEdge && fromEdge.n1 instanceof RailNode) {
+        if ((forNetwerk || withinApartment) && oppSegs.length === 0 || forMSR && fromEdge && fromEdge.n1 instanceof RailNode) {
             return 1;
         }
 
         let dy = 0;
         oppSegs.forEach(s => {
+            if (forNetwerk && s.n2 instanceof FlatkastNode)
+                return;
             const length = forMSR || s instanceof Transformer ? 10 : s instanceof Link ? 4 : (s as Cable).length;
-            dy += s.getOpposNode(this).computeLocNetwerk(sheet, x + PIXEL_SCALING * length, y + PIXEL_SCALING * 4 * dy, s,  withinApartment || s.n2 instanceof FlatkastNode);
+            const goingIntoApartment = forAptmt && s.n2 instanceof FlatkastNode;
+            const nx = x + PIXEL_SCALING * length;
+            const ny = y + PIXEL_SCALING * 4 * dy;
+            dy += s.getOpposNode(this).computeLocNetwerk(sheet, nx, ny, s, withinApartment || goingIntoApartment);
         }, this);
 
         return dy;
@@ -879,7 +888,7 @@ const writeToFile = async (text, localDataPath) => {
 };
 
 const configs = [
-    "(30G{160;1})(30G{250;2})(10(10(5(5V5V5V5V5V1))))(10(10(5(5W5W5W5W5W1))))(10(10(5(5H5T5T5T5H1)(5H5T5T5T5H1))))(10(10(5(5F{13;3}1))))"
+    "(30G{160;1})(30G{250;2})(40F{30;8}1)(25V5V5V5V5V1)(25W5W5W5W5W1)(20(5H5T5T5T5H1)(5H5T5T5T5H1))(25F{13;3}20F{13;3}1)"
     //, "(50(50(50(45(5V5V5V5V5V1)))))(50(50(50(45(5W5W5W5W5W1)))))(50(50(50(45(5H5T5T5T5H1)(5H5T5T5T5H1)))))"
     //, "(5V1)(5W1)(5H1)(5T1)"
     // , "(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))"
@@ -890,7 +899,6 @@ configs.forEach(async config => {
     const avp = parseAVP(config.split(''));
 
     const file = new GaiaFile();
-
     ["NETWERK", "MSR", "APPARTEMENTEN"].forEach(shName => {
         const sheet = file.addSheet(shName);
         avp.computePresentation(sheet);
@@ -899,4 +907,4 @@ configs.forEach(async config => {
     const fileContents = file.toString();
     await writeToFile(fileContents, `./data/${config}.gnf`);
 });
-const x = 2;
+
