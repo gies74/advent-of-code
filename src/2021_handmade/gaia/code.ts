@@ -891,14 +891,10 @@ configs.forEach(async config => {
 
     const file = new GaiaFile();
 
-    const netwerkSheet = file.addSheet("NETWERK");
-    avp.computePresentation(netwerkSheet);
-
-    const msrSheet = file.addSheet("MSR");
-    avp.computePresentation(msrSheet);
-
-    const apartmentSheet = file.addSheet("APPARTEMENTEN");
-    avp.computePresentation(apartmentSheet);
+    ["NETWERK", "MSR", "APPARTEMENTEN"].forEach(shName => {
+        const sheet = file.addSheet(shName);
+        avp.computePresentation(sheet);
+    });
 
     const fileContents = file.toString();
     await writeToFile(fileContents, `./data/${config}.gnf`);
