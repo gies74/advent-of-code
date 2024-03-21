@@ -1,4 +1,5 @@
 const fs = require('fs');
+const { cacheTypes } = require('./Types');
 
 const PIXEL_SCALING = 40;
 
@@ -80,7 +81,13 @@ class GaiaFile {
     toString() {
         let contents = "G7.15\nNETWORK\n\n[OPTIONS]\nCurrency=€\n[]\n\n";
 
-        const sheetLines = Object.keys(this.sheets).map((shName, idx) => "#1 " + String(idx + 1) + " '" + shName + "' $00C0C0C0 0 0 0 0 0 0 0 0 0 0").join("\n");
+        const sheetLines = Object
+            .keys(this.sheets)
+            .filter(s => {
+                return this.sheets[s].sheetObjects.length > 0;
+            }, this)
+            .map((shName, idx) => "#1 " + String(idx + 1) + " '" + shName + "' $00C0C0C0 0 0 0 0 0 0 0 0 0 0")
+            .join("\n");
         contents += `[SHEET]\n${sheetLines}\n[]\n\n`;
 
         const gaiaObjects = [...new Set(Object.values(this.sheets).reduce((all, sheet) => all.concat(sheet.sheetObjects.map(so => so.gaiaObject)), [] as GaiaObject[]))];
@@ -96,6 +103,11 @@ class GaiaFile {
 
             const kindObjs = gaiaObjects.filter(go => go.kind === oKind);
             kindObjs.forEach(ko => {
+                let homeTag3 = "", homeTag2 = "";
+                if (ko.aansluitwaarde) {
+                    homeTag2 = typeCache["cables"][`${ko.aansluitkabelDiam}Cu+${ko.aansluitkabelDiam}`];               
+                    homeTag3 = typeCache["fuses"][ko.aansluitwaarde];               
+                }
                 const tagLines = ko.tagLines
                     .replace("@ID", String(ko.id))
                     .replace("@SHORTNAME", ko.shortname)
@@ -108,6 +120,11 @@ class GaiaFile {
                     .replace("@EDGESIDE", ko.fuseEdgeSide)
                     .replace("@FUSEKVOLTAGE", ko.fuseKVoltage)
                     .replace("@HOMETAGLINES", ko.homeTagLines)
+                    .replace("@HOMESOORT", String(ko.homeSoort))
+                    .replace(/@AANSLUITWAARDE/g, String(ko.aansluitwaarde))
+                    .replace("@HOME_TAG3", homeTag3)
+                    .replace("@HOME_TAG2", homeTag2)
+                    .replace(/@AANSLUITKABELDIAM/g, String(ko.aansluitkabelDiam))
                     .replace("@LOADATTRS", ko.loadAttrs);
                 contents += tagLines;
                 const sheetTagLine = ko.sheetTagLine;
@@ -177,6 +194,18 @@ class GaiaObject {
 
     get homeTagLines() {
         return "#";
+    }
+
+    get homeSoort() {
+        return 0;
+    }
+
+    get aansluitkabelDiam() {
+        return 0;
+    }
+
+    get aansluitwaarde() {
+        return 0;
     }
 
     get sheetTagLine() {
@@ -260,6 +289,14 @@ class GaiaNode extends GaiaObject {
     nodeObject: GaiaObject = null;
     constructor() {
         super();
+    }
+
+    dropEdge(edge) {
+        const idxHere = this.edges.indexOf(edge);
+        this.edges.splice(idxHere, 1);
+        const oppNode = edge.getOpposNode(this);
+        const idxThere = oppNode.edges.indexOf(edge);
+        oppNode.edges.splice(idxThere, 1);
     }
 
     computeLocNetwerk(sheet: GaiaSheet, x: number, y: number, fromEdge: GaiaEdge, withinApartment:boolean = false) {
@@ -347,7 +384,14 @@ class RailNode extends GaiaNode {
 
 }
 
-class SourceNode extends GaiaNode {
+type HeldObject = Home | Load | Source;
+
+interface IObjectHolder {
+    nodeObject: HeldObject
+}
+
+class SourceNode extends GaiaNode implements IObjectHolder {
+    nodeObject: HeldObject;
     static lookups = {
         "objectKind": "NODE",
         "tagLines":
@@ -363,17 +407,19 @@ class SourceNode extends GaiaNode {
     }
 }
 
-class LoadNode extends GaiaNode {
+class LoadNode extends GaiaNode implements IObjectHolder {
+    nodeObject: HeldObject;
     constructor(aansluitwaarde: number = 250) {
         super();
         this.nodeObject = new Load(this, aansluitwaarde);
     }
 }
 
-class HomeNode extends GaiaNode {
-    constructor(homeKind) {
+class HomeNode extends GaiaNode implements IObjectHolder {
+    nodeObject: HeldObject;
+    constructor(homeKind, taglines="") {
         super();
-        this.nodeObject = new Home(this, homeKind);
+        this.nodeObject = new Home(this, homeKind, taglines);
     }
 }
 
@@ -388,29 +434,36 @@ class FlatkastAMNode extends GaiaNode implements IReconstructable {
     reconstruct() {
         const nApartments = this.parameters[0] as number;
         const nStories = this.parameters[1] as number;
-        const feedCable = new Cable(this, 10);
+        const nAanlooplengte = this.parameters[2] as number;
+        const aansluitwaardeI =(this.parameters.length > 2) ? this.parameters[3] as number : -1;
+
         const flatKast = new FlatkastNode();
-        feedCable.n2 = flatKast;
-        flatKast.edges.push(feedCable);
+        const feedCable = new Cable(this, flatKast, 10);
 
         const nStijgleidingen = Math.ceil(nApartments / nStories);
 
         for (var iStijgleiding = 0; iStijgleiding < nStijgleidingen; iStijgleiding++) {
             let prevNode = flatKast;
             for (var iApartment = iStijgleiding * nStories; iApartment < Math.min(nApartments, (iStijgleiding + 1) * nStories); iApartment++) {
-                const cable = new Cable(prevNode, 3);
+                const bFirstStijgleiding = prevNode === flatKast
                 const apartment = new HomeNode('A');
-                cable.n2 = apartment;
-                apartment.edges.push(cable);
-                if (prevNode === flatKast) {
+                const cable = new Cable(prevNode, apartment, bFirstStijgleiding ? nAanlooplengte : 3);
+                if (bFirstStijgleiding) {
                     new Fuse(cable, flatKast, "0,4", "gG 80 A");
                 }
                 prevNode = apartment;
             }
         }
-
+        // CVZ KV is present
+        if (aansluitwaardeI > 0) {
+            const taglines = Home.computeTag11(aansluitwaardeI);
+            const cvzKv = new HomeNode('O', taglines);
+            new Cable(flatKast, cvzKv, 3);
+            const home = cvzKv.nodeObject as Home;
+            home._aansluitkabelDiam = 16;
+            home._aansluitwaarde = 50;
+        }
     }
-
 }
 
 class FlatkastNode extends GaiaNode {
@@ -419,6 +472,7 @@ class FlatkastNode extends GaiaNode {
 
 class GVNode extends LoadNode implements IReconstructable {
     parameters: any[] = [];
+
     reconstruct() {
         const nAansluitwaarde = this.parameters[0] as number;
         const numKabels = this.parameters[1] as number;
@@ -426,35 +480,27 @@ class GVNode extends LoadNode implements IReconstructable {
             throw "GV must be first and only node after LS rek";
         }
         (this.nodeObject as Load).aansluitWaarde = nAansluitwaarde;
-        const feedCable = this.edges[0];
         if (numKabels == 2) {
-            const link = new Link(feedCable.n1);
+            const feedCable = this.edges[0];
+            this.dropEdge(feedCable);            
             const splitter = new RailNode();
-            link.n2 = splitter;
-            splitter.edges.push(link);
-            const fi = link.n1.edges.indexOf(feedCable);
-            link.n1.edges.splice(fi, 1);
+            const link = new Link(feedCable.n1, splitter);
 
-            feedCable.fuses.splice(0, feedCable.fuses.length);
-            feedCable.n1 = splitter;
-            splitter.edges.push(feedCable);
-            const secondCable = new Cable(splitter, feedCable.cableLength);
-            secondCable.n2 = this;
-            this.edges.push(secondCable);
+            new Cable(splitter, this, feedCable.cableLength);
+            new Cable(splitter, this, feedCable.cableLength);
         }
 
-        const infeedLink = new Link(this);
-        const infeedNode = new LoadNode(nAansluitwaarde);
-        infeedLink.n2 = infeedNode;
-        infeedNode.edges.push(infeedLink);
-
-        infeedNode.nodeObject = new Load(infeedNode, -1 * nAansluitwaarde);
+        const infeedNode = new LoadNode(-1 * nAansluitwaarde);
+        new Link(this, infeedNode);
     }
 }
 
 class KVNode extends GaiaNode implements IReconstructable {
     parameters: any[] = [];
-    reconstruct() { }
+    reconstruct() { 
+        const soortObject = this.parameters[0] as string;
+        new Home(this, "O", "#27 0,0251 0 5000\n", soortObject === "L" ? 3 : 1);
+    }    
 }
 
 
@@ -477,10 +523,12 @@ class GaiaEdge extends GaiaObject {
     n2: GaiaNode;
     fuses: Fuse[] = [];
 
-    constructor(n1: GaiaNode) {
+    constructor(n1: GaiaNode, n2:GaiaNode) {
         super();
         this.n1 = n1;
+        this.n2 = n2;
         n1.edges.push(this);
+        n2.edges.push(this);
 
         if (n1 instanceof RailNode) {
             new Fuse(this, n1, "0,4", "gFF 250 A");
@@ -536,8 +584,8 @@ class Cable extends GaiaEdge {
             "#9 @SHEETNO $000000FF 1 1 0  $00000000 10 'Arial' 0 0 0 12 6  -15 6  0 4  -20 20  5 0  0 0 # @GEOMSTRING\n"
     }
     length: number;
-    constructor(n: GaiaNode, length: number = 0) {
-        super(n);
+    constructor(start: GaiaNode, end:GaiaNode, length: number = 0) {
+        super(start, end);
         this.length = length;
     }
 
@@ -604,57 +652,106 @@ class GaiaNodeObject extends GaiaObject {
     }
 }
 
+
+
 class Home extends GaiaNodeObject {
     static lookups = {
         "objectKind": "HOME",
         "tagLines":
-            "#1 @NODEID @ID 45297,5286 '' 1 1 1 1 '' 1 1 2 3 12 '4*  6 Cu Aansluitk' '' 1 1 0 10 1 'Automaat c25' '' 4 0 '' 0 0 0 0 '' '' '' \n" +
-            "#2 '6Cu+6' 0,75 0 0,2 0,139 43 0,5 61 0,75 58 1 56 0,8 20 90 160 50 3,12935 0,85632 0,04935 0,76295 0,04935 0,74112 3,12935 0,72974 0,043803 0,73175 0 0 0 0 0 0 0 0 0 0 0 0 21 1,7 0 0 1 \n" +
-            "#3 'Caut 25 A' 0,5 25 39 1000 42 500 48 200 56 100 70 50 110 20 193 10 250 5 250 2 250 1 250 0,5 250 0,2 250 0,1 265 0,05 635 0,02 12500 0,01 \n" +
+            "#1 @NODEID @ID 45297,5286 '' 1 1 1 1 '' 1 1 2 3 12 '4* @AANSLUITKABELDIAM Cu Aansluitk' '' 1 1 0 10 1 'Automaat c@AANSLUITWAARDE' '' 4 @HOMESOORT '3 x @AANSLUITWAARDE A' 0 0 0 0 '' '' '' \n" +
+            "@HOME_TAG2 \n" +
+            "@HOME_TAG3 \n" +
+            "#7 0 0 \n" +
             "@HOMETAGLINES" +
-            "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
+            "#8 ''='' \n",
+
         "homeTagLines": {
             "V":
                 "#12 1 0 0 0 'SA vrijstaande woning'  \n" +
                 "#13 0,9 4300 0,2532 0,0335 0 0 0 0  \n" +
                 "#16 1 2 4 175 0,9 0  \n" +
                 "#27 0 0 1260  \n" +
-                "#18 1000 0 0,0073 180 30 0 180 30 0 180 30 0,0073 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
+                "#18 1000 0 0,0073 180 30 0 180 30 0 180 30 0,0073 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n" +
+                "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
             "W":
-                "#12 1 0 0 0 'SA 2-onder-1kap-woning' \n" +
+                "#12 1 0 0 0 'SA 2-onder-1-kap-woning' \n" +
                 "#13 0 0 0 0 0 0 0 0  \n" +
                 "#16 1 2 3 175 0,9 0  \n" +
                 "#27 0 0 1246  \n" +
-                "#18 1000 0 0,0058 180 30 0 180 30 0 180 30 0,0058 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
+                "#18 1000 0 0,0058 180 30 0 180 30 0 180 30 0,0058 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n" +
+                "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
             "H":
                 "#12 1 0 0 0 'SA hoekwoning'  \n" +
                 "#13 0,9 3300 0,2532 0,0335 0 0 0 0  \n" +
                 "#16 1 2 2 150 0,9 0  \n" +
                 "#27 0 0 854  \n" +
-                "#18 1000 0 0,0048 180 30 0 180 30 0 180 30 0,0048 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
+                "#18 1000 0 0,0048 180 30 0 180 30 0 180 30 0,0048 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n" +
+                "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
             "T":
                 "#12 1 0 0 0 'SA tussenwoning'  \n" +
                 "#13 0,9 3200 0,2532 0,0335 0 0 0 0  \n" +
                 "#16 1 2 1 125 0,9 0  \n" +
                 "#27 0 0 770  \n" +
-                "#18 1000 0 0,0044 180 30 0 180 30 0 180 30 0,0044 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n",
+                "#18 1000 0 0,0044 180 30 0 180 30 0 180 30 0,0044 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 1 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0  \n" +
+                "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
             "A":
                 "#12 1 0 0 0 'SA appartement' \n" +
                 "#13 0,9 2300 0,2532 0,0335 0 0 0 0 \n" +
                 "#16 1 2 5 100 0,9 0 \n" +
                 "#27 0 0 280 \n" +
-                "#18 1000 0 0,0012 180 30 0 180 30 0 180 30 0,0012 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0 \n",
+                "#18 1000 0 0,0012 180 30 0 180 30 0 180 30 0,0012 '0,1 pu: 93 %; 1 pu: 97 %' 0 0 0 0,9 1 1,1 1 0 0 0 0 0 0 0 1 1 1 0 0 0 0 0 0 0 0 0 1,5 0 \n" +
+                "#19 0,05 0 0,1 93 0,2 95 0,3 96 1 97\n",
         },
         "sheetTagLine":
             "#9 @SHEETNO @GEOMSTRING $000000FF 1 1 0 $00000000 10 'Arial' 0 0 0 7 -12  0 25  5 5  0\n",
     };
+    _aansluitwaarde:number = 25;
+    _aansluitkabelDiam:number = 6;
     homeKind: string;
-    constructor(node, homeKind) {
+    _soort:number;
+    OHomeTaglines:string = "";
+    constructor(node, homeKind, OHomeTaglines="", soort=1) {
         super(node);
         this.homeKind = homeKind;
+        this._soort = soort;
+        if (homeKind === "O" && !OHomeTaglines)
+            throw "For Home type O, taglines are mandatory";
+        this.OHomeTaglines = OHomeTaglines;
     }
     get homeTagLines() {
-        return this._staticLookup["homeTagLines"][this.homeKind];
+        // homeKind
+        return this.homeKind !== "O" ? this._staticLookup["homeTagLines"][this.homeKind] : this.OHomeTaglines;
+    }
+
+    get homeSoort() {
+        return this._soort;
+    }
+
+    get aansluitwaarde() {
+        return this._aansluitwaarde;
+    }
+
+    get aansluitkabelDiam() {
+        return this._aansluitkabelDiam;
+    }
+
+    static computeTag11(aansluitWaardeI, cosPhi=0.9) {
+        // 
+        const AC = [16,25,35,40,50,63,80];
+        const rekenwaardeIndex = AC.findIndex((aw, idx) => aw <= aansluitWaardeI && aansluitWaardeI < AC[idx+1]) - 1;
+        const rekenWaardeI = AC[Math.max(0, rekenwaardeIndex)];
+        const U = 230;
+        const S_kVA = U * rekenWaardeI / 1E3;
+
+        const sinPhi = Math.sqrt(1 - Math.pow(cosPhi, 2));
+
+        const P_MW = cosPhi * S_kVA / 1E3;
+        const Q_kvar = sinPhi * S_kVA / 1E3;
+
+        const roundF = (n, decimals) => Math.round(Math.pow(10, decimals) * n) / Math.pow(10, decimals);
+        const P_ = String(roundF(P_MW, 5)).replace(".", ",");
+        const Q_ = String(roundF(Q_kvar, 5)).replace(".", ",");
+        return `#11 ${P_} ${Q_} ${P_} ${Q_} ${P_} ${Q_} 0 0 0 0 0 0 0 0 0 0 0\n`;
     }
 }
 
@@ -722,7 +819,7 @@ class AVP {
     constructor() {
         const ms = new SourceNode();
         const rail = new RailNode();
-        this.trafo = new Transformer(ms);
+        this.trafo = new Transformer(ms, rail);
         this.trafo.n2 = rail;
         rail.edges.push(this.trafo);
 
@@ -781,6 +878,7 @@ const parseParams = (line: string[], object: IReconstructable) => {
     let c;
     let number = 0;
     let parsingNumber = false;
+    line.shift(); // should be  "{"
     while (c = line.shift()) {
         if (/\d/.test(c)) {
             parsingNumber = true;
@@ -802,71 +900,95 @@ const parseParams = (line: string[], object: IReconstructable) => {
     }
 };
 
-const parseKabel = (line: string[], node: GaiaNode, verbinding: Verbinding) => {
+const parseGV = (line: string[], railNode: RailNode, length: number) => {
+    line.shift(); // the G character
+    const gvNode = new GVNode();
+    new Cable(railNode, gvNode, length)
+    parseParams(line, gvNode);    
+    gvNode.reconstruct();
+    line.shift(); // the ) parenthesis character
+}
+
+
+
+const parseKabel = (line: string[], prevNode: GaiaNode, length: number) => {
     let c;
-    const kabel = new Kabel(node, verbinding);
-    let segment = new Cable(node);
-    let m = new AMof();
-    let gvVerbinding = false;
+
+    //const kabel = new Kabel(node, verbinding);
     while (c = line.shift()) {
-        if (/\d/.test(c)) {
-            segment.length = 10 * segment.length + parseInt(c);
-        } else if (/[THVW]/.test(c)) {
-            const h = new HomeNode(c);
-            segment.n2 = h;
-            h.edges.push(segment);
-            segment = new Cable(h);
-        } else if (/[FKG]/.test(c)) {
-            const flg = { "F": new FlatkastAMNode(), "K": new KVNode(), "G": new GVNode() }[c];
-            segment.n2 = flg;
-            flg.edges.push(segment);
-            if (line.shift() !== "{") {
-                throw "(F)latkast, (K)V and (G)V must be followed by parameters";
-            };
-            parseParams(line, flg);
-            flg.reconstruct();
-            gvVerbinding = c === "G";
-            if (gvVerbinding) {
-                continue;
+        if (/[ATHVWFK]/.test(c)) {
+            const hfkNode = /[ATHVW]/.test(c) ? new HomeNode(c) : c === "F" ? new FlatkastAMNode() : new KVNode();
+            new Cable(prevNode, hfkNode, length);
+            if (/[FK]/.test(c)) {
+                const fkNode = hfkNode as IReconstructable;
+                parseParams(line, fkNode);
+                fkNode.reconstruct();
             }
-            segment = new Cable(flg);
+            prevNode = hfkNode;
         } else if (c === "(") {
-            if (!segment.n2) {
-                segment.n2 = m;
-                m.edges.push(segment);
+            const mof = new AMof();
+            new Cable(prevNode, mof, length);
+            length = parseNumber(line);
+            parseKabel(line, mof, length);
+            while(line[0] === "(") {
+                line.shift();
+                length = parseNumber(line);
+                parseKabel(line, mof, length);
             }
-            parseKabel(line, m, verbinding);
+            if (line[0] === ")") {
+                line.shift();
+                break;
+            }
+            prevNode = mof;
         } else if (c === ")") {
-            if (m.edges.length >= 2 || gvVerbinding)
-                return;
-            m = new EMof();
-            segment.n2 = m;
-            m.edges.push(segment);
-            return;
+            const mof = new EMof();
+            new Cable(prevNode, mof, length);
+            break;
         } else {
             throw "Error kabel";
         }
+        length = parseNumber(line);
     }
 };
 
-const parseVerbinding = (line, avp: AVP) => {
+const parseNumber = (line:string[]):number => {
     let c;
-    const verbinding = new Verbinding(avp);
-    parseKabel(line, verbinding.avp.trafo.n2, verbinding);
+    let num = parseInt(c = line.shift());
+    if (isNaN(num))
+        throw `Numeric char expected, yet encountered '${c}'`;
+    while (/\d/.test(line[0])) {
+        num = num * 10 + parseInt(line.shift());
+    }
+    return num;
+};
+
+
+const parseVerbinding = (line, avp: AVP) => {
+    const headLength = parseNumber(line);
+    if (/G/.test(line[0])) {
+        parseGV(line, avp.rail, headLength);
+        return;
+    }
+    //const verbinding = new Verbinding(avp);
+    parseKabel(line, avp.rail, headLength);
 };
 
 const parseAVP = (line) => {
     let c;
     const avp = new AVP();
-    while (c = line.shift()) {
-        switch (c) {
-            case "(":
-                parseVerbinding(line, avp);
-            case ")":
-                continue;
-            default:
-                throw "Error AVP";
+    try {
+        while (c = line.shift()) {
+            switch (c) {
+                case "(":
+                    parseVerbinding(line, avp);
+                    break;
+                default:
+                    throw `parseAVP encountered unexpected char '${c}'`;
+            }
         }
+    } catch (error) {
+        console.warn(`Parse error: ${error}\nProgram execution stopped.`);
+        process.exit();
     }
 
     return avp;
@@ -887,16 +1009,42 @@ const writeToFile = async (text, localDataPath) => {
     });
 };
 
-const configs = [
-    "(30G{160;1})(30G{250;2})(40F{30;8}1)(25V5V5V5V5V1)(25W5W5W5W5W1)(20(5H5T5T5T5H1)(5H5T5T5T5H1))(25F{13;3}20F{13;3}1)"
-    //, "(50(50(50(45(5V5V5V5V5V1)))))(50(50(50(45(5W5W5W5W5W1)))))(50(50(50(45(5H5T5T5T5H1)(5H5T5T5T5H1)))))"
-    //, "(5V1)(5W1)(5H1)(5T1)"
-    // , "(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))(5(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1)(5V1))"
-    // , "(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)(5H5T5T5T5H20H5T5T5T5T5T5H20H5T5T5T5H1)"
-]
-configs.forEach(async config => {
+// const configs = [
+//     "(10F{40;10;3;50}1)(10V10W10H10T10A10K{L;4}1)(10G{160;1})(10G{250;2})",
+//     "(10V)",
+//     "(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))",
+//     "(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))",
+//     "(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))",
+//     "(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))",
+//     "(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)",
+// ]
+
+const numLookup = {
+    "A": 50,
+    "T": 30,
+    "H": 30,
+    "W": 22,
+    "V": 15,
+};
+
+const OFFSET =  30;
+
+const configs:{[name:string]:string} = {};
+for (var woningType of ["V", "W", "H", "T", "A"]) {
+    const noOfAansl = numLookup[woningType];
+    for (var cableLen of [200, 250, 300, 350, 400]) {
+        const config = Array(noOfAansl).fill(woningType).join(String(Math.round((cableLen - OFFSET) / noOfAansl)));
+        configs[`${noOfAansl}x${woningType}_over_${cableLen}m`]= `(${OFFSET}${config}1)`;
+    }
+}
+
+let typeCache;
+
+Object.entries(configs).forEach(async ([name, config]) => {
 
     const avp = parseAVP(config.split(''));
+
+    typeCache = await cacheTypes();
 
     const file = new GaiaFile();
     ["NETWERK", "MSR", "APPARTEMENTEN"].forEach(shName => {
@@ -905,6 +1053,6 @@ configs.forEach(async config => {
     });
 
     const fileContents = file.toString();
-    await writeToFile(fileContents, `./data/${config}.gnf`);
+    await writeToFile(fileContents, `./data/gnf/${name}.gnf`);
 });
 
