@@ -821,7 +821,6 @@ class AVP {
         const rail = new RailNode();
         this.trafo = new Transformer(ms, rail);
         this.trafo.n2 = rail;
-        rail.edges.push(this.trafo);
 
         new Fuse(this.trafo, ms, "10", "PATR Trafo 630 kVA H");
         new Fuse(this.trafo, rail, "0,4", "PATR Trafo 630 kVA L");
@@ -1009,34 +1008,34 @@ const writeToFile = async (text, localDataPath) => {
     });
 };
 
-// const configs = [
-//     "(10F{40;10;3;50}1)(10V10W10H10T10A10K{L;4}1)(10G{160;1})(10G{250;2})",
-//     "(10V)",
-//     "(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))",
-//     "(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))",
-//     "(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))",
-//     "(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))(10(1T10T10T10T10T1)(1T10T10T10T10T1)(1T10T10T10T10T1))",
-//     "(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)",
-// ]
+const configs = {
+    // "mix1":  "(10F{40;10;3;50}1)(70V1(10V5V5V5V5V1)(10V5V5V5V5V1)(10V5V5V5V5V1)1)(10W10H10T10A10K{L;4}1)(10G{160;1})(10G{250;2})",
+    // "(10V)",
+    // "(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))(10(1V10V10V10V10V1)(1V10V10V10V10V1)(1V10V10V10V10V1))",
+    // "(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))(10(1W10W10W10W10W1)(1W10W10W10W10W1)(1W10W10W10W10W1))",
+    // "(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))(10(1H10H10H10H10H1)(1H10H10H10H10H1)(1H10H10H10H10H1))",
+    "tus1": "(199(1T10T10T10T10T1)(1T10T10T10T10T1))",
+    // "(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)(50F{15;5;15}50F{15;5;15}1)",
+};
 
 const numLookup = {
     "A": 50,
     "T": 30,
-    "H": 30,
+    "H": 28,
     "W": 22,
     "V": 15,
 };
 
 const OFFSET =  30;
 
-const configs:{[name:string]:string} = {};
-for (var woningType of ["V", "W", "H", "T", "A"]) {
-    const noOfAansl = numLookup[woningType];
-    for (var cableLen of [200, 250, 300, 350, 400]) {
-        const config = Array(noOfAansl).fill(woningType).join(String(Math.round((cableLen - OFFSET) / noOfAansl)));
-        configs[`${noOfAansl}x${woningType}_over_${cableLen}m`]= `(${OFFSET}${config}1)`;
-    }
-}
+// const configs:{[name:string]:string} = {};
+// for (var woningType of ["V", "W", "H", "T", "A"]) {
+//     const noOfAansl = numLookup[woningType];
+//     for (var cableLen of [200, 250, 300, 350, 400]) {
+//         const config = Array(noOfAansl).fill(woningType).join(String(Math.round((cableLen - OFFSET) / noOfAansl)));
+//         configs[`${noOfAansl}x${woningType}_over_${cableLen}m`]= `(${OFFSET}${config}1)`;
+//     }
+// }
 
 let typeCache;
 
