@@ -19,8 +19,6 @@ namespace day16 {
         return dict;
     };
 
-
-
     class ValveRoom {
         name:string;
         valveFlowrate:number;
@@ -31,6 +29,7 @@ namespace day16 {
             this.name = name;
             this.valveFlowrate = valveFlowrate;
             adjNames.forEach(n => this.connect(n, dict), this);
+
         }
 
         toStateString(minutesLeft:number, prevRooms:ValveRoom[]) {
