@@ -109,6 +109,9 @@ namespace day16 {
             const r = this.minutesLeftOpened * this.room.valveFlowrate;
             return r;
         }
+        toString() {
+            return this.room.name + '(' + String(this.minutesLeftOpened) + '*' + String(this.room.valveFlowrate) + ')';
+        }
     }
 
     class SearchState {
@@ -120,11 +123,12 @@ namespace day16 {
         fScore:number;
         backPointer:SearchState = null;
 
-        constructor(roomX, roomY, minutesLeft, valveTimes) {
+        constructor(roomX, roomY, minutesLeft, valveTimes, backPointer = null) {
             this.roomX = roomX;
             this.roomY = roomY;
             this.minutesLeft = minutesLeft;
             this.valveTimes = valveTimes;
+            this.backPointer = backPointer;
         }
 
         calcNeighbours():SearchState[] {
@@ -132,6 +136,7 @@ namespace day16 {
             if (this.minutesLeft === 0) {
                 return neighbours;
             }
+            // ["WI", "IR"].includes(this.roomX.name) && ["WI", "IR"].includes(this.roomY.name) && this.minutesLeft === 22
             this.roomX.adjValveRooms.forEach(avrX => {
 
                 // both agents move
@@ -143,7 +148,7 @@ namespace day16 {
                 if (!this.valveTimes.find(vt => vt.room === this.roomY)) {
 
                     // x moves, y opens valve
-                    neighbours.push(new SearchState(avrX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomY))));
+                    neighbours.push(new SearchState(avrX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomY)), this.backPointer));
                 }
             });
 
@@ -152,14 +157,14 @@ namespace day16 {
 
                 // x opens valve, y moves
                 this.roomY.adjValveRooms.forEach(avrY => {
-                    neighbours.push(new SearchState(this.roomX, avrY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX))));
+                    neighbours.push(new SearchState(this.roomX, avrY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX)), this.backPointer));
                 });
 
                 // y cannot open a valve that is already open
                 if (!this.valveTimes.find(vt => vt.room === this.roomY)) {
 
                     // both agents open valve simultaneously
-                    neighbours.push(new SearchState(this.roomX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX),new ValveTime(this.minutesLeft-1, this.roomY))));
+                    neighbours.push(new SearchState(this.roomX, this.roomY, this.minutesLeft - 1, this.valveTimes.concat(new ValveTime(this.minutesLeft-1, this.roomX),new ValveTime(this.minutesLeft-1, this.roomY)), this.backPointer));
                 }
             }
 
@@ -174,8 +179,12 @@ namespace day16 {
             return Utils.sum(this.valveTimes.map(vt => vt.totalFlow));
         }
 
+        backTrack() {
+            return  (this.backPointer ? this.backPointer.backTrack() : []).concat([this.toString()]);
+        }
+
         toString() {
-            return `${this.roomX},${this.roomY} [${this.minutesLeft}] {${this.valveTimes.map(vt => vt.room.name + '(' + String(vt.minutesLeftOpened) + ')').join(',')}} ::: ${this.evalGScore()}`
+            return `${this.roomX},${this.roomY} [${this.minutesLeft}] {${this.valveTimes.map(vt => vt.toString()).join(',')}} ::: ${this.evalGScore()}`
         }
     }
 
@@ -192,23 +201,23 @@ namespace day16 {
 
             if (currentIdx === -1) {
                 // todo: backtrack
-                return Math.max(...Object.values(space).map(v => Math.max(...Object.values(v).map(w => w[0].gScore))));
+                const maxScore = Math.max(...Object.values(space).map(v => Math.max(...Object.values(v).map(w => w[0].gScore))));
+                const searchStates = Object.values(space).reduce((as, s) => (as as any[]).concat(...Object.values(s).reduce((ass, ss) => ass.concat([ss[0]]) , [])), []) as SearchState[];
+                console.log(searchStates.find(ss => ss.gScore === maxScore).backTrack().join("\n"));
+                return maxScore;
             }
 
             const current = openSet[currentIdx];
             openSet.splice(currentIdx, 1);
 
+             // [current.roomX.name, current.roomY.name].every(n => ["LY", "WI"].includes(n)) && current.roomX.name !== current.roomY.name && current.minutesLeft === 21 && current.valveTimes.length===1
             const neighbours= current.calcNeighbours();
             neighbours.forEach(neighbour => {
                 const tentativeScore = neighbour.evalGScore();
-                let n1=neighbour.roomX.name, n2=neighbour.roomY.name;
-                if (!space[n1][n2]) {
-                    const tmp = n1;
-                    n1 = n2;
-                    n2 = tmp;
-                }
-                const spaceItem = space[n1][n2][neighbour.minutesLeft];
+                const spaceItem = spaceNeighbour(neighbour, space, neighbour.minutesLeft);
+                //const spaceItem2 = spaceNeighbour(neighbour, space, neighbour.minutesLeft + current.valveTimes.filter(vt => vt.totalFlow > 0).length);
                 if (tentativeScore > spaceItem.gScore) {
+                    // [n1, n2].every(n => ["SS", "JZ"].includes(n)) && n1 !== n2 && neighbour.minutesLeft === 21 && neighbour.valveTimes.length
                     spaceItem.gScore = tentativeScore;
                     spaceItem.fScore = neighbour.h;
                     spaceItem.valveTimes = neighbour.valveTimes;
@@ -260,5 +269,16 @@ namespace day16 {
         // set this switch to Part.Two once you've finished part one.
         Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
-        1);
+        0);
+
+    function spaceNeighbour(neighbour: SearchState, space: any, minutesLeft:number) {
+        let n1 = neighbour.roomX.name, n2 = neighbour.roomY.name;
+        if (!space[n1][n2]) {
+            const tmp = n1;
+            n1 = n2;
+            n2 = tmp;
+        }
+        const spaceItem = space[n1][n2][minutesLeft];
+        return spaceItem;
+    }
 }
