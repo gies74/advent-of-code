@@ -9,7 +9,6 @@ import { Part, Utils } from "../../generic";
 
 namespace day24 {
 
-
     class Port {
         value:number;
         comps:Component[] = [];
@@ -38,8 +37,8 @@ namespace day24 {
         nonUsedComponents(used) {
             return this.comps.filter(c => !used.includes(c));
         }
-
     }
+
     class Component {
         port1: Port;
         port2: Port;
