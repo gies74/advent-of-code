@@ -196,7 +196,7 @@ namespace day25 {
 
             let minCut = 10000;
             const set = new Set();
-            for (var i=0; i<0; i++) {
+            for (var i=0; ; i++) {
 
                 const [allComponents, allWires] = buildComponents(input);
                 

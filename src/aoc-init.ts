@@ -102,7 +102,7 @@ const extractExample = async (html, localDataPath) => {
         attemptComplete(null);
       });
     } catch {
-      console.warn('[WARN] Dit not extract example');
+      console.warn('[WARN] Did not extract example');
       attemptComplete(null);
     }
   });

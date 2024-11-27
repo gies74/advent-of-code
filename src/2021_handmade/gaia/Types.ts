@@ -2,7 +2,7 @@ const readXlsxFile = require('read-excel-file/node');
 
 'use strict';
 
-const _FILE = './data/Types.xlsx';
+const _FILE = './src/Types.xlsx';
 
 const _FUSE_SCHEMA = {
     'Shortname': {
