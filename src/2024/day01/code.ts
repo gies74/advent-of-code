@@ -36,17 +36,11 @@ namespace day01 {
                 }
                 return d;
             }, {});
-            let similarity = 0;
-            list1.forEach(item => {
-                if (dict[item])
-                    similarity += dict[item];
-            });
-            return similarity;
-
+            return list1.reduce((cum, item) => cum + (dict[item] ? dict[item] : 0), 0);
 
         }, "2024", "day01", 
         // set this switch to Part.Two once you've finished part one.
-        Part.Two, 
+        Part.One, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/dayDAY
         0);
 }
