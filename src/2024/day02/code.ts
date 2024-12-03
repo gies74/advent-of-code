@@ -9,6 +9,8 @@ import { Part, Utils } from "../../generic";
 
 namespace day02 {
 
+    const reportIsSafe = series => series.every((_, i) => i === 0 || [1,2,3].includes(series[i]-series[i-1])) || series.every((_, i) => i === 0 || [-1,-2,-3].includes(series[i]-series[i-1]));
+
     Utils.main(
         /**
          * Main entry point of this day's code
@@ -20,15 +22,15 @@ namespace day02 {
         (input: string[], part: Part, example: number = 0) => {
 
             const intInput = input.map(line => line.split(" ").map(nm => parseInt(nm)));
-            const safe = intInput.filter(row => { 
+            const safe = intInput.filter(series => { 
 
-                let isSafe = row.every((nm, i) => i === 0 || [1,2,3].includes(row[i]-row[i-1])) || row.every((nm, i) => i === 0 || [-1,-2,-3].includes(row[i]-row[i-1]));
+                let isSafe = reportIsSafe(series);
                 if (part === Part.One || isSafe)
                     return isSafe;
-                for (var j=0; j<row.length; j++) {
-                    const rowMod = row.slice(0);
-                    rowMod.splice(j,1);
-                    isSafe = rowMod.every((nm, i) => i === 0 || [1,2,3].includes(rowMod[i]-rowMod[i-1])) || rowMod.every((nm, i) => i === 0 || [-1,-2,-3].includes(rowMod[i]-rowMod[i-1]));
+                for (var j=0; j<series.length; j++) {
+                    const seriesMod = series.slice(0);
+                    seriesMod.splice(j,1);
+                    isSafe = reportIsSafe(seriesMod);
                     if (isSafe)
                         return true;
                 }
