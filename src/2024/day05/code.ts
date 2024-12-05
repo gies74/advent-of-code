@@ -24,10 +24,9 @@ namespace day05 {
 
             let sum=0;
             updates.forEach(update => {
-                const pages = update.split(',');
-                const sortedPages = pages.slice(0).sort(sorter);
+                const sortedPages = update.split(',').slice(0).sort(sorter);
                 const sortedUpdate = sortedPages.join(',');
-                if (part === Part.One && update === sortedUpdate || part === Part.Two && update !== sortedUpdate) {
+                if ((part === Part.One) == (update === sortedUpdate)) {
                     sum += parseInt(sortedPages[(sortedPages.length-1)/2]);
                 }
             });
@@ -36,7 +35,7 @@ namespace day05 {
 
         }, "2024", "day05", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
         0);
 }
