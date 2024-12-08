@@ -9,11 +9,11 @@ import { Part, Utils } from "../../generic";
 
 namespace day07 {
 
-    const makeList = (list:number[], part:Part) => {
+    const operateList = (list:number[], part:Part) => {
         if (list.length === 1)
             return list;
         const operand = list.pop();
-        const operatedList = makeList(list, part);
+        const operatedList = operateList(list, part);
         const result = operatedList.map(it => it + operand).concat(operatedList.map(it => it * operand));
         if (part === Part.Two)
             result.splice(0, 0, ...operatedList.map(it => parseInt(String(it) + String(operand))));
@@ -34,7 +34,7 @@ namespace day07 {
 
             input.forEach(line => {
                 const [result, numbers] = line.split(": ");
-                const operatedList = makeList(numbers.split(" ").map(nmber => parseInt(nmber)), part);
+                const operatedList = operateList(numbers.split(" ").map(nmber => parseInt(nmber)), part);
                 const resultInt = parseInt(result);
                 if (operatedList.includes(resultInt))
                     sum += resultInt;
