@@ -9,28 +9,61 @@ import { Part, Utils } from "../../generic";
 
 namespace day06 {
 
-    const right = { "^": [[0, 1], ">"], ">": [[1, 0], "v"], "v": [[0, -1], "<"], "<": [[-1, 0], "^"], };
+    class PosState {
+        position:number[];
+        symbol:string;
+        constructor(position:number[], symbol:string) {
+            this.position = position;
+            this.symbol = symbol;
+        }
+        get facing():number[] {
+            return { "^": [-1, 0], ">": [0, 1], "v": [1, 0], "<": [0, -1]}[this.symbol];
+        }
+        turn():PosState {
+            const symbol = { "^": ">", ">": "v", "v": "<", "<": "^", }[this.symbol];
+            return new PosState(this.position, symbol);
+        }
+        stride():PosState {
+            return new PosState([this.position[0] + this.facing[0], this.position[1] + this.facing[1]] , this.symbol);
+        }
+        equals(ps:PosState, includeSymbol) {
+            return ps.position[0] === this.position[0] && ps.position[1] === this.position[1] && (!includeSymbol || ps.symbol === this.symbol);
+        }
+    }
 
-    const evalObstacle = (grid, symbol, pos) => {
-        const facing = right[symbol][0];
-        symbol = right[symbol][1];
+    const findPathOut = (grid:string[][], posState:PosState, hypothesizeObstacles:boolean):number => {
+        const pathHistory:PosState[] = [];
+        const obstacleHistory:PosState[] = [];
+
         while (true) {
-            const npos = [pos[0] + facing[0], pos[1] + facing[1]];
-            if (npos[0] === -1 || npos[0] === grid.length || npos[1] === -1 || npos[1] === grid[0].length)
-                return false;
+            if (!pathHistory.some(ps => ps.equals(posState, false))) {
+                pathHistory.push(posState);
+            }
+
+            const npos = [posState.position[0] + posState.facing[0], posState.position[1] + posState.facing[1]];
+            if (npos[0] === -1 || npos[0] === grid.length || npos[1] === -1 || npos[1] === grid[0].length) {
+                // leaving grid, return how many steps
+                return hypothesizeObstacles ? obstacleHistory.length : pathHistory.length;
+            }
 
             const gridSymbol = grid[npos[0]][npos[1]];
-
-            const nnpos = [pos[0] + 2 * facing[0], pos[1] + 2 * facing[1]];
-            const nnposInside = !(nnpos[0] === -1 || nnpos[0] === grid.length || nnpos[1] === -1 || nnpos[1] === grid[0].length);
-
-            if (gridSymbol === symbol || nnposInside && grid[nnpos[0]][nnpos[1]] === "#" && gridSymbol === right[symbol][1])
-                return true;
-
-            if (gridSymbol === "#")
-                return false;
-
-            pos = npos;
+            if (![".", "^"].includes(gridSymbol)) {
+                posState = posState.turn();
+                continue;
+            }
+            if (hypothesizeObstacles && (npos[0] !== pathHistory[0].position[0] || npos[1] !== pathHistory[0].position[1])) {
+                const gridClone = grid.map(row => row.slice(0));
+                gridClone[npos[0]][npos[1]] = "O";
+                const pathLen = findPathOut(gridClone, pathHistory[0], false);
+                const obstacle = new PosState([npos[0],npos[1]], "#");
+                if (pathLen === -1 && !obstacleHistory.some(ps => ps.equals(obstacle, false)))
+                    obstacleHistory.push(obstacle);
+            }
+            posState = posState.stride();
+            if (pathHistory.some(ps => ps.equals(posState, true))) {
+                // been here before loop detected
+                return -1;
+            }            
         }
     }
 
@@ -48,40 +81,9 @@ namespace day06 {
             const grid = input.map(line => line.split(""));
             var pos = [input.findIndex(line => /\^/.test(line)), 0];
             pos[1] = grid[pos[0]].findIndex(cell => cell === "^");
-            var symbol = "^";
-            var facing = [-1, 0];
-            
-            let cntUniq = 1;
-            let cntOptions = 0;
+            const start = new PosState(pos, "^");
 
-            while (true) {
-
-                const npos = [pos[0] + facing[0], pos[1] + facing[1]];
-                if (npos[0] === -1 || npos[0] === grid.length || npos[1] === -1 || npos[1] === grid[0].length)
-                    break;
-
-                const gridSymbol = grid[npos[0]][npos[1]];
-                if (gridSymbol === "#") {
-                    facing = right[symbol][0];
-                    symbol = right[symbol][1];
-                    continue;
-                } else if (gridSymbol === ".") {
-                    grid[npos[0]][npos[1]] = symbol;
-                    cntUniq++;
-                }
-                if (evalObstacle(grid, symbol, pos)) {
-                    const dgrid = grid.map(line => line.join(""));
-                    dgrid[npos[0]] = dgrid[npos[0]].substring(0, npos[1]) + "O" + dgrid[npos[0]].substring(npos[1] + 1);
-                    console.log(dgrid.join("\n") + "\n");
-
-                    cntOptions++;
-                }
-                pos = npos;
-                
-            }
-
-            // part 2: 545 too low
-            return part === Part.One ? cntUniq : cntOptions;
+            return findPathOut(grid, start, part === Part.Two);
 
         }, "2024", "day06", 
         // set this switch to Part.Two once you've finished part one.
