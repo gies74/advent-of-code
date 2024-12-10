@@ -1,5 +1,5 @@
 /**
- * Advent of Code solution 2024/day10
+ * Advent of Code solution 2024/day08
  * (c) 2022-2024 Gies Bouwman
  * gies.bouwman@alliander.com
  * All rights reserved.
@@ -7,14 +7,20 @@
 
 import { Part, Utils } from "../../generic";
 
-namespace day10 {
-    
-    class File {
+namespace day08 {
 
-        static idSeq: number = 0;
-        id:number;
-        constructor() {
-            this.id = File.idSeq++;
+    class Cell {
+        nines;
+        coord:number[];
+        value:number;
+        neighbours:Cell[];
+        constructor(value, coord) {
+            this.value = value;
+            this.coord = coord;
+            this.nines = new Set();
+            this.neighbours = [];
+            if (value === 9)
+                this.nines.add(this);
         }
     }
 
@@ -28,40 +34,43 @@ namespace day10 {
          */
         (input: string[], part: Part, example: number = 0) => {
 
-            const fs = [];
-            const lengths = input[0].split("").map(ln => parseInt(ln));
+            const grid = input.map((line, ri) => line.split("").map((c, ci) => new Cell(parseInt(c), [ri, ci])));
 
-            lengths.forEach((nm, i) => {
-                const file = (i%2 === 0) ? new File() : null;
-                for (var block=0; block<nm; block++)
-                    fs.push(file);
-            });
+            const dirs = Utils.multiDimOffsets(2, true);
+            grid.forEach(row => row.forEach(cell => {
+                dirs.forEach(dir => {
+                    const vc = cell.coord[0] + dir[0];
+                    const hc = cell.coord[1] + dir[1];
+                    if (vc >= 0 && vc < grid.length && hc >= 0 && hc < grid[0].length ? grid[vc][hc] : null) {
+                        const nCell = grid[vc][hc];
+                        cell.neighbours.push(nCell);
 
-            let blockPtr = fs.length-1;
-            let spacePtr = 0;
-            while (spacePtr < blockPtr) {
-                if (!fs[blockPtr]) {
-                    blockPtr--;
-                    continue;
-                }
-                if (fs[spacePtr]) {
-                    spacePtr++;
-                    continue;
-                }
-                fs[spacePtr] = fs[blockPtr];
-                fs[blockPtr] = null;
+                    }
+
+                });
+            }));
+
+            for (var val=9;val>0;val--) {
+                grid.forEach(row => row.forEach(c => {
+                    if (c.value === val) {
+                        c.neighbours.forEach(n => {
+                            if (n.value === val - 1) {
+                                [...c.nines].forEach(nine => n.nines.add(nine));
+                            }
+                        });
+                    }
+
+                }));
             }
 
-            blockPtr = 0;
             let sum = 0;
-            while (fs[blockPtr]) {
-                sum += blockPtr * fs[blockPtr].id;
-                blockPtr++;
-            }
+            grid.forEach(row => row.forEach(c => {
+                if (c.value === 0)
+                    sum += c.nines.size;
+            }));
 
             return sum;
 
-        
 
         }, "2024", "day10", 
         // set this switch to Part.Two once you've finished part one.
