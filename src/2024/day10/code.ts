@@ -12,15 +12,19 @@ namespace day08 {
     class Cell {
         nines;
         coord:number[];
+        ntrails:number;
         value:number;
         neighbours:Cell[];
         constructor(value, coord) {
             this.value = value;
+            this.ntrails = 0;
             this.coord = coord;
             this.nines = new Set();
             this.neighbours = [];
-            if (value === 9)
+            if (value === 9) {
                 this.nines.add(this);
+                this.ntrails = 1;
+            }
         }
     }
 
@@ -55,6 +59,7 @@ namespace day08 {
                     if (c.value === val) {
                         c.neighbours.forEach(n => {
                             if (n.value === val - 1) {
+                                n.ntrails += c.ntrails;
                                 [...c.nines].forEach(nine => n.nines.add(nine));
                             }
                         });
@@ -65,8 +70,9 @@ namespace day08 {
 
             let sum = 0;
             grid.forEach(row => row.forEach(c => {
-                if (c.value === 0)
-                    sum += c.nines.size;
+                if (c.value === 0) {
+                    sum += part === Part.One ? c.nines.size : c.ntrails;
+                }
             }));
 
             return sum;
@@ -74,7 +80,7 @@ namespace day08 {
 
         }, "2024", "day10", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
         0);
 }
