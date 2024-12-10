@@ -48,31 +48,22 @@ namespace day08 {
                     if (vc >= 0 && vc < grid.length && hc >= 0 && hc < grid[0].length ? grid[vc][hc] : null) {
                         const nCell = grid[vc][hc];
                         cell.neighbours.push(nCell);
-
                     }
-
                 });
             }));
 
             for (var val=9;val>0;val--) {
-                grid.forEach(row => row.forEach(c => {
-                    if (c.value === val) {
-                        c.neighbours.forEach(n => {
-                            if (n.value === val - 1) {
-                                n.ntrails += c.ntrails;
-                                [...c.nines].forEach(nine => n.nines.add(nine));
-                            }
-                        });
-                    }
-
+                grid.forEach(row => row.filter(c => c.value === val).forEach(c => {
+                    c.neighbours.filter(n => n.value === val - 1).forEach(n => {
+                        [...c.nines].forEach(nine => n.nines.add(nine));
+                        n.ntrails += c.ntrails;
+                    });
                 }));
             }
 
             let sum = 0;
-            grid.forEach(row => row.forEach(c => {
-                if (c.value === 0) {
-                    sum += part === Part.One ? c.nines.size : c.ntrails;
-                }
+            grid.forEach(row => row.filter(c => c.value === 0).forEach(c => {
+                sum += part === Part.One ? c.nines.size : c.ntrails;
             }));
 
             return sum;
