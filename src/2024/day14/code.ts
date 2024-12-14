@@ -30,13 +30,15 @@ namespace day14 {
     const detectXmasTree = (robots:Robot[], dims:number[]):boolean => {
 
         const robotsPerRow = Array(dims[1]).fill(null).map((_, ri) => robots.filter(r => r.p[1] === ri).length);
+        if (Math.max(...robotsPerRow) <= 20)
+            return false;
         const robotsPerColumn= Array(dims[0]).fill(null).map((_, ci) => robots.filter(r => r.p[0] === ci).length);
-        const maxR = Math.max(...robotsPerRow);
-        const maxC = Math.max(...robotsPerColumn);
+        if (Math.max(...robotsPerColumn) <= 20)
+            return false;
     
-        const overN = maxR > 20 && maxC > 20;
+        // assumption: a Xmas tree formation requires 20 robots to be in a row as well as 20 in a column - this will naver happen by pure chance
 
-        return overN;
+        return true;
     }
 
     Utils.main(
@@ -51,10 +53,8 @@ namespace day14 {
 
             const DIMS = example === 1 ? [11,7] : [101,103];
 
-            const parts = part === Part.One ? 2 : 4;
-            const allQs = Array(parts).fill(null).reduce((ai, _, j) => ai.concat(Array(parts).fill(null).map((_, i) => [[i * (DIMS[0]+1)/parts, (i+1) * (DIMS[0]+1)/parts-1],[j * (DIMS[1]+1)/parts, (j+1) * (DIMS[1]+1)/parts-1]])), []);
-            // const quadrants = [[0,(DIMS[0]+1)/2], [(DIMS[0]+1)/2, DIMS[0]], [0,(DIMS[1]+1)/2], [(DIMS[1]+1)/2, DIMS[1]]];
-            // const allQs = [[quadrants[0],quadrants[2]],[quadrants[1],quadrants[2]],[quadrants[0],quadrants[3]],[quadrants[1],quadrants[3]]];
+            const numSectors = 2;
+            const quadrants = Array(numSectors).fill(null).reduce((ai, _, j) => ai.concat(Array(numSectors).fill(null).map((_, i) => [[i * (DIMS[0]+1)/numSectors, (i+1) * (DIMS[0]+1)/numSectors-1],[j * (DIMS[1]+1)/numSectors, (j+1) * (DIMS[1]+1)/numSectors-1]])), []);
 
             const robots = input.map(line => new Robot(line));
             for (var i=0; i<(part === Part.One ? 100 : 1000000); i++) {
@@ -66,15 +66,15 @@ namespace day14 {
                 }
             }
 
-            const qtots = allQs.map(q => robots.filter(r => [0,1].every(d => { 
+            const quadrantCounts = quadrants.map(q => robots.filter(r => [0,1].every(d => { 
                 return r.p[d] >= q[d][0] && r.p[d] < q[d][1];
             })).length);
 
-            return qtots.reduce((prod,qt) => prod * qt, 1);
+            return quadrantCounts.reduce((prod,qt) => prod * qt, 1);
 
         }, "2024", "day14", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
         0);
 }
