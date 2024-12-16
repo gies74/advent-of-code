@@ -5,6 +5,9 @@ import * as generic from './generic';
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+const agent = new HttpsProxyAgent(process.env["HTTPS_PROXY"]);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -54,6 +57,7 @@ const _doInit = async (answer: string) => {
     const options = {
       host: `adventofcode.com`,
       port: 443,
+      agent: agent,
       method: 'GET',
       path: `/${generic.Settings.YEAR}/day/${answer}${spec.path}`, // 9-11-2022 19:29:58
       headers: {
