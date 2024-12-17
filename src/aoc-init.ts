@@ -7,7 +7,7 @@ const fs = require('fs');
 const https = require('https');
 import { HttpsProxyAgent } from 'https-proxy-agent';
 
-const agent = new HttpsProxyAgent(process.env["HTTPS_PROXY"]);
+const agent = process.env["HTTPS_PROXY"] ? new HttpsProxyAgent(process.env["HTTPS_PROXY"]) : null;
 
 const rl = readline.createInterface({
   input: process.stdin,
