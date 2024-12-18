@@ -44,14 +44,7 @@ namespace day18 {
 
     const exitReachable = (grid) => {
         const gridsize = grid.length;
-        grid.forEach((row, ri) => row.forEach((node, ci) => {
-            if (!node)
-                return;
-            if (ri > 0 && grid[ri-1][ci])
-                new Edge(grid[ri-1][ci], node);
-            if (ci > 0 && grid[ri][ci - 1])
-                new Edge(grid[ri][ci - 1], node);
-        }));
+
         const startNode = grid[0][0];
         const targetNode = grid[gridsize-1][gridsize-1];
         targetNode.score = 0;
@@ -90,8 +83,6 @@ namespace day18 {
             let stillReachable = 0;
             let notReachable = input.length-1;
 
-
-
             while (notReachable - stillReachable > 1) {
 
                 let fallen = stillReachable + Math.floor((notReachable - stillReachable) / 2);
@@ -101,6 +92,14 @@ namespace day18 {
                 }
                 const firstBytes = input.slice(0, fallen);
                 const grid = Utils.multiDimArray([gridsize,gridsize], c => firstBytes.includes(`${c[1]},${c[0]}`) ? null : new Node(c));
+                grid.forEach((row, ri) => row.forEach((node, ci) => {
+                    if (!node)
+                        return;
+                    if (ri > 0 && grid[ri-1][ci])
+                        new Edge(grid[ri-1][ci], node);
+                    if (ci > 0 && grid[ri][ci - 1])
+                        new Edge(grid[ri][ci - 1], node);
+                }));
     
                 if (exitReachable(grid)) {
                     stillReachable = fallen;
