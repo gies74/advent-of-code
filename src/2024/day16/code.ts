@@ -16,7 +16,7 @@ namespace day16 {
         coords:number[];
         ch:string;
         edges:{[wind:string]:Edge} = {};
-        scoreToEnd:{[origWind:string]:number} = {};
+        scoreToEnd:{[origWind:string]:number} = {"we": Number.MAX_SAFE_INTEGER, "ns": Number.MAX_SAFE_INTEGER};
         constructor(ch:string, coords:number[]) {
             this.ch = ch;
             this.coords = coords;
@@ -35,29 +35,6 @@ namespace day16 {
                 e1.node2 = oppNode;
             oppNode.edges[oppNode.wind(e2)] = e1;
             e1.length += e2.length + (oppWindDir[windDirs[0]] === windDirs[1] ? 0 : 1000);
-        }
-        findEnd(history:Edge[]):number {            
-            if (this.ch === "E")
-                return 0;
-
-            const origWindDir = this.ch === "S" ? "w" : this.wind(history[history.length - 1]);
-
-            if (!this.scoreToEnd[origWindDir])
-            {
-                this.scoreToEnd[origWindDir] = Number.MAX_VALUE;
-
-                const windDirs = Object.keys(this.edges).filter(wd => !history.includes(this.edges[wd]), this);
-
-                for (var windDir of windDirs) {
-                    const edge = this.edges[windDir];
-                    const oppNode = edge.oppNode(this);
-                    const scoreToEnd = (oppWindDir[windDir] === origWindDir ? 0 : 1000) + edge.length + oppNode.findEnd(history.concat([edge]));
-                    if (scoreToEnd < this.scoreToEnd[origWindDir])
-                        this.scoreToEnd[origWindDir] = scoreToEnd;
-                }
-            }
-
-            return this.scoreToEnd[origWindDir]
         }
     }
 
@@ -115,12 +92,40 @@ namespace day16 {
         (input: string[], part: Part, example: number = 0) => {
 
             const maze = input.map((line,li) => line.split("").map((ch,ci) => "SE.".includes(ch) ? new Node(ch, [li, ci]) : null));
-            const nodes = buildGraph(maze, maze[maze.length-2][1], maze[1][maze[0].length-2]);
+            const start = maze[maze.length-2][1];
+            const end = maze[1][maze[0].length-2];
+            const nodes = buildGraph(maze, start, end);
 
-            const cost = nodes.find(n => n.ch === "S").findEnd([]);
+            //const cost = nodes.find(n => n.ch === "S").findEnd([]);
+            end.scoreToEnd["we"] = 0;
+            end.scoreToEnd["ns"] = 0;
+            const open:Set<Node> = new Set([end]);
 
-            // 126464 too high
-            return cost;
+            while (open.size) {
+                const lowScore = Math.min(...[...open].map(n => Math.min(...Object.values(n.scoreToEnd))));
+                const goodNode = [...open].find(n => lowScore === Math.min(...Object.values(n.scoreToEnd)));
+                for (var edge of Object.values(goodNode.edges)) {
+                    const oppNode = edge.oppNode(goodNode);
+                    const windDirGoodNode = Object.keys(goodNode.edges).find(wd => goodNode.edges[wd] === edge);
+                    const scoreGoodNode = goodNode.scoreToEnd[["w", "e"].includes(windDirGoodNode) ? "we" : "ns"];
+                    const windDirOppNode = Object.keys(oppNode.edges).find(wd => oppNode.edges[wd] === edge);
+                    const length = edge.length + scoreGoodNode;
+                    const wePenaltyOppNode = ["w", "e"].includes(windDirOppNode) ? 0 : 1000;
+                    const nsPenaltyOppNode = 1000 - wePenaltyOppNode;
+                    if (oppNode.scoreToEnd["we"] > length + wePenaltyOppNode) {
+                        oppNode.scoreToEnd["we"] = length + wePenaltyOppNode;
+                        open.add(oppNode);
+                    }
+                    if (oppNode.scoreToEnd["ns"] > length + nsPenaltyOppNode) {
+                        oppNode.scoreToEnd["ns"] = length + nsPenaltyOppNode;
+                        open.add(oppNode);
+                    }                    
+                }
+                open.delete(goodNode);
+            }
+
+            return start.scoreToEnd["we"];
+
 
         }, "2024", "day16", 
         // set this switch to Part.Two once you've finished part one.
