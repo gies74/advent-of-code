@@ -11,15 +11,17 @@ namespace day19 {
 
     const known = {};
 
-    const test = (restLinnen:string, patterns:RegExp[]):number => {
+    const test = (restLinnen:string, patterns:RegExp[], part:Part):number => {
         if (restLinnen === "")
             return 1;
         if (known[restLinnen] !== undefined)
             return known[restLinnen];
         let count=0;
         for (var pattern of patterns) {
+            if (part === Part.One && count)
+                break;
             if (pattern.test(restLinnen)) {
-                count += test(restLinnen.replace(pattern, ""), patterns);
+                count += test(restLinnen.replace(pattern, ""), patterns, part);
             }
         }
         known[restLinnen] = count;
@@ -41,14 +43,14 @@ namespace day19 {
 
             let cnt = 0;
             for (var lin of linnen) {
-                cnt += test(lin, res);
+                cnt += test(lin, res, part);
             }
 
             return cnt;
 
         }, "2024", "day19", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
         0);
 }
