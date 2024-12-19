@@ -27,26 +27,31 @@ namespace day17 {
             input1.forEach(line => {
                 const m = line.match(pattern);
                 register[m[1]] = parseInt(m[2]);
-            })
+            });
+            register["A"] = 0b11011011011011011;
 
             const instrs = input2[0].replace("Program: ", "").split(",");
             let instrPtr = 0;
 
             const output = [];
             while (instrPtr < instrs.length) {
+                const bitRegister = Object.entries(register).map(([k,v]) => `${k}: ${Number(v).toString(2)}`).join(", ");
                 const opcode = instrs[instrPtr];
                 const operand = parseInt(instrs[instrPtr+1]);
                 const comboOperand = operand < 4 ? operand : Object.values(register)[operand-4];
 
+
                 switch (opcode) {
                     case "0": 
-                        register["A"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        //register["A"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        register["A"] = register["A"] >> 3;
                         break;
                     case "1":
                         register["B"] = register["B"] ^ operand;
                         break;
                     case "2":
-                        register["B"] = comboOperand % 8;
+                        register["B"] = register["A"] & 7;
+                        //register["B"] = comboOperand % 8;
                         break;
                     case "3":
                         if (register["A"] !== 0) {
@@ -58,13 +63,16 @@ namespace day17 {
                         register["B"] = register["B"] ^ register["C"];
                         break;
                     case "5":
-                        output.push(comboOperand % 8);
+                        //output.push(comboOperand % 8);
+                        output.push(register["B"] & 7);
                         break;
                     case "6":
-                        register["B"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        //register["B"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        register["B"] = register["A"] >> comboOperand;
                         break;
                     case "7":
-                        register["C"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        // register["C"] = Math.floor(register["A"] / Math.pow(2, comboOperand));
+                        register["C"] = register["A"] >> register["B"];
                         break;
                 }
 
