@@ -28,7 +28,7 @@ namespace day17 {
                 const m = line.match(pattern);
                 register[m[1]] = parseInt(m[2]);
             });
-            register["A"] = 0b11011011011011011;
+            register["A"] = 0b101110000001011;
 
             const instrs = input2[0].replace("Program: ", "").split(",");
             let instrPtr = 0;
