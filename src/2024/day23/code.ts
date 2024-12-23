@@ -20,6 +20,7 @@ namespace day23 {
     }
 
     function* bron_kerbosch(graph:{[key:string]:Node}, r=new Set(), p=null, x:Set<string>=new Set()) {
+        // inspired by https://www.altcademy.com/blog/discover-the-largest-complete-subgraph/
         if (p === null) {
             p = new Set(Object.keys(graph));
         }
