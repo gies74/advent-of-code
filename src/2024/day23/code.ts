@@ -19,6 +19,23 @@ namespace day23 {
         }
     }
 
+    function* bron_kerbosch(graph:{[key:string]:Node}, r=new Set(), p=null, x:Set<string>=new Set()) {
+        if (p === null) {
+            p = new Set(Object.keys(graph));
+        }
+        if (!p.size && !x.size)
+            yield r;
+        else {
+            const u = [...p, ...x][0];
+            for (var v of [...p].filter(pe => !graph[u].nodes.map(n=>n.name).includes(pe))) {
+                const vNeighbourNameSet = new Set(graph[v].nodes.map(n => n.name));
+                yield *bron_kerbosch(graph, new Set([...r, v]), Utils.getIntersection(p, vNeighbourNameSet), Utils.getIntersection(x, vNeighbourNameSet));
+                p.delete(v);
+                x.add(v);
+            }
+        }
+    };
+
     Utils.main(
         /**
          * Main entry point of this day's code
@@ -39,22 +56,36 @@ namespace day23 {
             });
 
             const targets = [];
-            Object.entries(lookup).forEach(([key,node]) => {
-                node.nodes.forEach(node_l1 => {
-                    node_l1.nodes.forEach(node_l2 => {
-                        const names = [node.name, node_l1.name, node_l2.name];
-                        if (node_l2.nodes.includes(node) && names.some(nm => /^t/.test(nm)) && !targets.some(tgt => tgt.every(nm => names.includes(nm)))) {
-                            targets.push(names);
-                        }
+            if (part === Part.One) {
+                Object.entries(lookup).forEach(([key,node]) => {
+                    node.nodes.forEach(node_l1 => {
+                        node_l1.nodes.forEach(node_l2 => {
+                            const names = [node.name, node_l1.name, node_l2.name];
+                            if (node_l2.nodes.includes(node) && names.some(nm => /^t/.test(nm)) && !targets.some(tgt => tgt.every(nm => names.includes(nm)))) {
+                                targets.push(names);
+                            }
+                        });
                     });
                 });
-            });
+                return targets.length;
+            } else {
 
-            return 0;
+                let largestClique:Set<string> = new Set();
+                for (var clique of bron_kerbosch(lookup)) {
+                    if (clique.size > largestClique.size) {
+                        largestClique = clique;
+                    }
+                }
+
+                const retVal = [...largestClique].sort().join(",");
+                return retVal;
+            }
+
+            
 
         }, "2024", "day23", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
         0);
 }
