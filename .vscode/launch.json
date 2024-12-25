@@ -9,7 +9,7 @@
             "name": "Prep",
             "request": "launch",
             "program": "${workspaceFolder}\\src\\app.ts",
-            "args": ["14"],
+            "args": ["24"],
             "preLaunchTask": "npm: build",
             "sourceMaps": true,
             "smartStep": true,

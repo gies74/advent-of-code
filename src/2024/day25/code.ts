@@ -28,21 +28,21 @@ namespace day25 {
                         totals[ci] += (c==="#" ? 1 : 0);
                     });
                     return totals;
-                 }, Array(chunk[0].length).fill(-1));
-                 if (chunk[0] === "#####")
+                }, Array(chunk[0].length).fill(-1));
+                if (chunk[0] === "#####")
                     locks.push(heights);
                 else
                     keys.push(heights);
             });
 
             let fits = 0;
-            for (var lock of locks) {
-                for (var key of keys) {
+            locks.forEach(lock => {
+                keys.forEach(key => {
                     const sumHeights = lock.map((height, ci) => height + key[ci]);
                     if (sumHeights.every(h => h <= 5))
                         fits++;
-                }
-            }
+                });
+            });
 
             return fits;
 
