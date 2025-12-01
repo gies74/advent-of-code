@@ -35,16 +35,24 @@ namespace day12 {
                     b.region2 = this;
             })
         }
+
+        sides():number {
+            return 1;
+        }
     }
 
     class Border {
         region1:Region;
         region2:Region;
+        dir:string;
+        index:number;
         constructor(r1, r2) {
             this.region1 = r1;
             this.region2 = r2;
             r1.borders.push(this);
             r2.borders.push(this);
+            this.dir = r1.coords[0] == r2.coords[0] ? "H" : "V";
+            this.index = this.dir == "H" ? r1.coords[0] : r1.coords[1];
         }
     }
 
@@ -79,12 +87,13 @@ namespace day12 {
                 border.region1.merge(border.region2);
             }
 
-
-            return regions.reduce((cum, r) => cum + r.area * r.perimeter , 0);
+            if (part == Part.One)
+                return regions.reduce((cum, r) => cum + r.area * r.perimeter , 0);
+            return regions.reduce((cum, r) => cum + r.area * r.sides() , 0);
 
         }, "2024", "day12", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
-        0);
+        3);
 }
