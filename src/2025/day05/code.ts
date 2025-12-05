@@ -32,7 +32,6 @@ namespace day05 {
             if (part === Part.One) {
                 const ids = p2.map(line => parseInt(line));
                 count = ids.filter(id => ranges.some(r => r[0] <= id && id <= r[1])).length;
-
             } else {
 
                 let cntRangesPrev = Number.MAX_SAFE_INTEGER;
