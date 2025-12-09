@@ -42,6 +42,9 @@ namespace day08 {
         toString() {
             return this.coords.map(c => String(c)).join(",");
         }
+        dist(otherjbox:JBox):number {
+            return [0,1,2].reduce((cum, n) => cum + Math.pow(this.coords[n]-otherjbox.coords[n],2), 0); 
+        }
     }
 
     Utils.main(
@@ -55,47 +58,61 @@ namespace day08 {
         (input: string[], part: Part, example: number = 0) => {
 
             const jboxes = input.map(l => new JBox(l));
-            const lines:Line[] = [];
+            const lines:number[][] = Utils.multiDimArray(2, jboxes.length, ()=>0);
+            const all = [];
             for (let i=0;i<jboxes.length-1;i++)
-                for(let j=i+1;j<jboxes.length;j++)
-                    lines.push(new Line(jboxes[i], jboxes[j]));
+                for(let j=i+1;j<jboxes.length;j++) {
+                    lines[i][j] = jboxes[i].dist(jboxes[j]);
+                    all.push(lines[i][j]);
+                }
 
             let goal = example === 1 ? 10 : 1000;
-            while (goal>0) {
+            const circuits:Set<JBox>[] = [];
+            while (goal>0 || part === Part.Two) {
+                let min = Number.MAX_SAFE_INTEGER;
+                let mini = 0;
+                let minj = 0;
+                for (let i=0;i<jboxes.length-1;i++) {
+                    const row = lines[i].slice(i+1);
+                    const tmin = Math.min(...row);
+                    if (tmin < min) {
+                        min = tmin;
+                        mini = i;
+                        minj = i + 1 + row.findIndex(e => e === tmin);
+                    }
+                }
+                const jb1 = jboxes[mini];
+                const jb2 = jboxes[minj];
+                const ncircuits = circuits.filter(c => c.has(jb1) || c.has(jb2));
+                if (ncircuits.length === 0) {
+                    circuits.push(new Set([jb1, jb2]));                    
+                } else {
+                    ncircuits[0].add(jb1);
+                    ncircuits[0].add(jb2);
+                    if (ncircuits.length > 1) {
+                        [...ncircuits[1]].forEach(e => ncircuits[0].add(e));
+                        circuits.splice(circuits.indexOf(ncircuits[1]), 1);
+                    }
+                }
+                if (part === Part.Two && circuits[0].size === jboxes.length) {
+                    return jb1.coords[0] * jb2.coords[0];
+                }
+                lines[mini][minj] = Number.MAX_SAFE_INTEGER;
+
                 goal--;
-                console.log(goal);
-                let shortestDist=Number.MAX_SAFE_INTEGER;
-                let shortestLine=null;
-                lines.filter(l => !l.used).forEach(line => {
-                    if (line.length < shortestDist) {
-                        shortestDist = line.length;
-                        shortestLine = line;
-                    }                    
-                });
-                shortestLine.used = true;
             }
 
-            const circuits:JBox[][] = [];
-            let jbox;
-            while ((jbox = jboxes.find(jb => !circuits.some(circuit => circuit.includes(jb)))) !== undefined) {
-                const circuit = [jbox];
-                circuits.push(circuit);
-
-                let cjbox;
-                while ((cjbox = jboxes.find(jb => !circuit.includes(jb) && circuit.some(cjb => jb.lines.some(l => l.connects(jb, cjb))))) != undefined)
-                    circuit.push(cjbox);
-            }
-
-            let circuitSizes = circuits.map(c => c.length);
-            circuitSizes = circuitSizes.sort().reverse();
+            let circuitSizes = circuits.map(c => c.size);
+            circuitSizes.sort((a,b) => a - b);
+            circuitSizes.reverse();
             const prod3 = circuitSizes.slice(0, 3).reduce((prod, e) => prod * e, 1);
 
             return prod3;  //729 too low
 
         }, "2025", "day08", 
         // set this switch to Part.Two once you've finished part one.
-        Part.One, 
+        Part.Two, 
         // set this to N > 0 in case you created a file called input_exampleN.txt in folder data/YEAR/DAY
-        1
+        0
     );
 }
