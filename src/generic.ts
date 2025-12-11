@@ -1,4 +1,10 @@
 const fs = require("fs");
+require('dotenv').config();
+const readline = require('node:readline');
+const https = require('https');
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+const agent = process.env["HTTPS_PROXY"] ? new HttpsProxyAgent(process.env["HTTPS_PROXY"]) : null;
 
 export class Settings {
     public static readonly YEAR = 2025;
@@ -8,6 +14,11 @@ export enum Part {
     One = 1,
     Two = 2
 }
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
 
 export class Utils {
 
@@ -24,6 +35,47 @@ export class Utils {
         const sTime = Date.now();
         const result = processFunc(input, part, example);
         console.log(`Answer part ${part}: ${result} (time elapsed: ${Date.now() - sTime} ms)`);
+        
+        year = "2016";
+        day = "2";
+        part = Part.One;
+        const options = {
+            host: `adventofcode.com`,
+            port: 443,
+            agent: agent,
+            method: 'POST',
+            path: `/${year}/day/${day.replace("day0","").replace("day", "")}/answer`, // 9-11-2022 19:29:58
+            headers: {
+                cookie: process.env["AOC_COOKIE"],
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/107.0.0.0 Safari/537.36'
+            }
+        };
+
+        rl.question(`Post this answer? [Y,N] `, ans => {
+            if (ans.toUpperCase() === "Y") {
+                const postData = JSON.stringify({
+                    level: part === Part.One ? 1 : 2,
+                    answer: result
+                });
+                options.headers["Content-Length"] = postData.length;
+                const req = https.request(options, (res) => {
+                    res.on('data', (d) => {
+                        rl.write(Buffer.from(d).toString('utf-8'));
+                    });
+                    res.on('end', (d) => {
+                        const a=3;
+                    })
+                });
+                req.on('error', (e) => {
+                    console.error(e);
+                });
+                req.write(postData);
+                req.end();
+            }
+            rl.close();
+        });
+        //const doPost = prompt("Post this answer? [Y,N]", "N") === "Y";
     }
 
     /**
