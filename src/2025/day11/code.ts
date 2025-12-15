@@ -25,8 +25,8 @@ namespace day11 {
                 this._path_count_cache = this.outputs.reduce((cum, o) => {
                     const paths = o.n_dac_fft_paths();
                     const anyPaths = paths[0];
-                    const dacPaths = paths[1] + ((self.name === "dac") ? paths[0] : 0);
-                    const fftPaths = paths[2] + ((self.name === "fft") ? paths[0] : 0);
+                    const dacPaths = (self.name === "dac") ? paths[0] : paths[1];
+                    const fftPaths = (self.name === "fft") ? paths[0] : paths[2];
                     const bothPaths = paths[3] + ((self.name === "dac") ? paths[2] : (self.name === "fft") ? paths[1] : 0);
                     return [cum[0] + anyPaths, cum[1] + dacPaths, cum[2] + fftPaths, cum[3] + bothPaths];
                 }, [0, 0, 0, 0]);
